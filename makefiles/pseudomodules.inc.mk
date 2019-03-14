@@ -154,4 +154,6 @@ PSEUDOMODULES += crypto_aes_precalculated
 # This pseudomodule causes a loop in AES to be unrolled (more flash, less CPU)
 PSEUDOMODULES += crypto_aes_unroll
 
+# Over the Air update modules
+PSEUDOMODULES += suit_%
 # Packages may also add modules to PSEUDOMODULES in their `Makefile.include`.

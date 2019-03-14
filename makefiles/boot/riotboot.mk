@@ -126,6 +126,9 @@ riotboot/slot1: $(SLOT1_RIOT_BIN)
 # Default flashing rule for bootloader + slot 0
 riotboot/flash: riotboot/flash-slot0 riotboot/flash-bootloader
 
+# include suit targets
+include $(RIOTMAKE)/suit.inc.mk
+
 else
 riotboot:
 	$(Q)echo "error: riotboot feature not selected! (try FEATURES_REQUIRED += riotboot)"
