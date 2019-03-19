@@ -40,7 +40,7 @@ USEMODULE += shell_commands
 # SUIT update specific stuff
 #
 
-USEMODULE += nanocoap_sock
+USEMODULE += nanocoap_sock sock_util
 USEMODULE += suit suit_coap
 
 ifneq (native,$(BOARD))
