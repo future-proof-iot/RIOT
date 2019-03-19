@@ -14,6 +14,7 @@
 #include "msg.h"
 #include "log.h"
 #include "net/nanocoap.h"
+#include "net/nanocoap_sock.h"
 #include "thread.h"
 
 #ifdef MODULE_RIOTBOOT_SLOT
@@ -32,11 +33,27 @@
 #endif
 
 #define SUIT_URL_MAX 128
+#define SUIT_MANIFEST_BUFSIZE 512
 #define SUIT_MSG_TRIGGER 0x12345
 
 static char _stack[SUIT_COAP_STACKSIZE];
 static char _manifest_url[SUIT_URL_MAX];
+static uint8_t _manifest_buf[SUIT_MANIFEST_BUFSIZE];
+
 static kernel_pid_t _suit_coap_pid;
+
+static void _suit_handle_manifest_url(const char *url)
+{
+    LOG_INFO("suit_coap: downloading \"%s\"\n", url);
+    ssize_t size = nanocoap_get_blockwise_url_buf(url, COAP_BLOCKSIZE_64, _manifest_buf,
+                                              SUIT_MANIFEST_BUFSIZE);
+    if (size >= 0) {
+        LOG_INFO("suit_coap: got manifest with size %u\n", (unsigned)size);
+    }
+    else {
+        LOG_INFO("suit_coap: error getting manifest\n");
+    }
+}
 
 static void *_suit_coap_thread(void *arg)
 {
@@ -55,7 +72,7 @@ static void *_suit_coap_thread(void *arg)
         switch (m.content.value) {
             case SUIT_MSG_TRIGGER:
                 LOG_INFO("suit_coap: trigger received\n");
-                LOG_INFO("suit_coap: URL=\"%s\"\n", _manifest_url);
+                _suit_handle_manifest_url(_manifest_url);
                 break;
             default:
                 LOG_WARNING("suit_coap: warning: unhandled msg\n");
