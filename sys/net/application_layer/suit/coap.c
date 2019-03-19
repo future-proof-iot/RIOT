@@ -31,7 +31,7 @@
 #define SUIT_COAP_PRIO THREAD_PRIORITY_MAIN - 1
 #endif
 
-#define SUIT_URL_MAX 64
+#define SUIT_URL_MAX 128
 #define SUIT_MSG_TRIGGER 0x12345
 
 static char _stack[SUIT_COAP_STACKSIZE];
