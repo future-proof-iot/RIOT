@@ -18,8 +18,8 @@ EPOCH := $(shell date +%s)
 APP_VER ?= $(EPOCH)
 
 # Final target for slot 0 with riot_hdr
-SLOT0_RIOT_BIN = $(BINDIR_APP)-slot0.riot.bin
-SLOT1_RIOT_BIN = $(BINDIR_APP)-slot1.riot.bin
+SLOT0_RIOT_BIN = $(BINDIR_APP)-slot0.$(APP_VER).riot.bin
+SLOT1_RIOT_BIN = $(BINDIR_APP)-slot1.$(APP_VER).riot.bin
 SLOT_RIOT_BINS = $(SLOT0_RIOT_BIN) $(SLOT1_RIOT_BIN)
 
 $(BINDIR_APP)-%.elf: $(BASELIBS)
@@ -36,7 +36,7 @@ $(BINDIR_APP)-slot1.elf: FW_ROM_LEN=$$((SLOT1_LEN - $(RIOTBOOT_HDR_LEN)))
 $(BINDIR_APP)-slot1.elf: ROM_OFFSET=$(SLOT1_IMAGE_OFFSET)
 
 # Create binary target with RIOT header
-$(SLOT_RIOT_BINS): %.riot.bin: %.hdr %.bin
+$(SLOT_RIOT_BINS): %.$(APP_VER).riot.bin: %.hdr %.bin
 	@echo "creating $@..."
 	$(Q)cat $^ > $@
 
