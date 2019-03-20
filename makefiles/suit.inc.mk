@@ -22,6 +22,7 @@ define manifest-recipe
 	  -d $(SUIT_DEVICE_ID) \
 	  -V $(SUIT_VERSION) \
 	  -e $(SUIT_VENDOR) \
+	  --no-sign \
 	  -o $@ \
 	  $<
 endef
