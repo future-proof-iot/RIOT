@@ -21,6 +21,11 @@
 #include "riotboot/slot.h"
 #endif
 
+#ifdef MODULE_SUIT_V1
+#include "suit/v1/suit.h"
+#include "suit/v1/cbor.h"
+#endif
+
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
@@ -37,18 +42,38 @@
 #define SUIT_MSG_TRIGGER 0x12345
 
 static char _stack[SUIT_COAP_STACKSIZE];
-static char _manifest_url[SUIT_URL_MAX];
+static char _url[SUIT_URL_MAX];
 static uint8_t _manifest_buf[SUIT_MANIFEST_BUFSIZE];
 
 static kernel_pid_t _suit_coap_pid;
 
-static void _suit_handle_manifest_url(const char *url)
+static void _suit_handle_url(const char *url)
 {
     LOG_INFO("suit_coap: downloading \"%s\"\n", url);
     ssize_t size = nanocoap_get_blockwise_url_buf(url, COAP_BLOCKSIZE_64, _manifest_buf,
                                               SUIT_MANIFEST_BUFSIZE);
     if (size >= 0) {
         LOG_INFO("suit_coap: got manifest with size %u\n", (unsigned)size);
+
+#ifdef MODULE_SUIT_V1
+        suit_v1_cbor_manifest_t manifest_v1;
+        ssize_t res;
+
+        if ((res = suit_v1_parse(&manifest_v1, _manifest_buf, size)) != SUIT_OK) {
+            printf("suit_v1_parse() failed. res=%i\n", res);
+            return;
+        }
+
+        if ((res = suit_v1_cbor_get_url(&manifest_v1, _url, SUIT_URL_MAX)) <= 0) {
+            printf("suit_v1_cbor_get_url() failed res=%i\n", res);
+            return;
+        }
+
+        LOG_INFO("suit_coap: got image URL: \"%.*s\"\n", size, _url);
+#else
+        LOG_INFO("suit_coap: no suit parser installed, doing nothing\n");
+#endif
+
     }
     else {
         LOG_INFO("suit_coap: error getting manifest\n");
@@ -72,7 +97,7 @@ static void *_suit_coap_thread(void *arg)
         switch (m.content.value) {
             case SUIT_MSG_TRIGGER:
                 LOG_INFO("suit_coap: trigger received\n");
-                _suit_handle_manifest_url(_manifest_url);
+                _suit_handle_url(_url);
                 break;
             default:
                 LOG_WARNING("suit_coap: warning: unhandled msg\n");
@@ -125,11 +150,11 @@ static ssize_t _trigger_handler(coap_pkt_t *pkt, uint8_t *buf, size_t len,
             code = COAP_CODE_REQUEST_ENTITY_TOO_LARGE;
         }
         else {
-            memcpy(_manifest_url, pkt->payload, payload_len);
-            _manifest_url[payload_len] = '\0';
+            memcpy(_url, pkt->payload, payload_len);
+            _url[payload_len] = '\0';
 
             code = COAP_CODE_CREATED;
-            LOG_INFO("suit: received URL: \"%s\"\n", _manifest_url);
+            LOG_INFO("suit: received URL: \"%s\"\n", _url);
             msg_t m = { .content.value = SUIT_MSG_TRIGGER };
             msg_send(&m, _suit_coap_pid);
         }
