@@ -188,7 +188,9 @@ def _get_args():
     parser.add_argument("-b", "--valid-duration", type=int,
                         help="Valid duration in seconds")
     parser.add_argument("-o", "--output", type=argparse.FileType('wb'),
-                        help="Signed manifest output file")
+                        help="Manifest output file")
+    parser.add_argument("-n", "--no-sign", action="store_true",
+                        help="do not sign manifest, output plain SUIT cbor")
     parser.add_argument("file", type=argparse.FileType('rb'),
                         help="Input binary to create the manifest for")
     args = parser.parse_args()
@@ -207,8 +209,13 @@ def main():
         skey = ed25519.SigningKey(_parse_privkey(key_data))
     suit = _format_suit(args)
     print("manifest generated, {} bytes long".format(len(cbor.dumps(suit))))
-    sign = _sign1(cbor.dumps(suit), "test", skey)
-    args.output.write(cbor.dumps(sign))
+
+    if args.no_sign:
+        args.output.write(cbor.dumps(suit))
+    else:
+        sign = _sign1(cbor.dumps(suit), "test", skey)
+        args.output.write(cbor.dumps(sign))
+
     return 0
 
 
