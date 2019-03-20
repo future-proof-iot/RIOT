@@ -22,7 +22,7 @@
 #include "net/nanocoap_sock.h"
 #include "xtimer.h"
 
-#include "net/suit/coap.h"
+#include "suit/coap.h"
 
 #define COAP_INBUF_SIZE (256U)
 
