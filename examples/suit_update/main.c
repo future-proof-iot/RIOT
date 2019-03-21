@@ -23,6 +23,7 @@
 #include "xtimer.h"
 
 #include "suit/coap.h"
+#include "riotboot/slot.h"
 
 #define COAP_INBUF_SIZE (256U)
 
@@ -34,7 +35,8 @@ extern int _gnrc_netif_config(int argc, char **argv);
 
 int main(void)
 {
-    puts("RIOT nanocoap example application");
+    puts("RIOT SUIT update example application");
+    printf("running from slot %u\n", riotboot_slot_current());
 
     /* nanocoap_server uses gnrc sock which uses gnrc which needs a msg queue */
     msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
