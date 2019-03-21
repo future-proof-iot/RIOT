@@ -54,7 +54,7 @@ suit/publish: $(SUIT_MANIFESTS) $(SLOT0_RIOT_BIN) $(SLOT1_RIOT_BIN)
 		echo "       as \"$(SUIT_COAP_ROOT)/$$(basename $$file)\""; \
 	done
 
-suit/notify:
+suit/notify: | $(filter suit/publish, $(MAKECMDGOALS))
 	@test -n "$(SUIT_CLIENT)"
 	$(Q)TARGET_SLOT=$$(aiocoap-client "coap://$(SUIT_CLIENT)/suit/slot/inactive") && \
 	if [ "$$TARGET_SLOT" = 0 ]; then \
