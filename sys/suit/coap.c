@@ -16,9 +16,11 @@
 #include "net/nanocoap.h"
 #include "net/nanocoap_sock.h"
 #include "thread.h"
+#include "periph/pm.h"
 
 #ifdef MODULE_RIOTBOOT_SLOT
 #include "riotboot/slot.h"
+#include "riotboot/flashwrite.h"
 #endif
 
 #ifdef MODULE_SUIT_V1
@@ -30,7 +32,7 @@
 #include "debug.h"
 
 #ifndef SUIT_COAP_STACKSIZE
-#define SUIT_COAP_STACKSIZE THREAD_STACKSIZE_MEDIUM
+#define SUIT_COAP_STACKSIZE (4*THREAD_STACKSIZE_MEDIUM)
 #endif
 
 #ifndef SUIT_COAP_PRIO
@@ -41,6 +43,7 @@
 #define SUIT_MANIFEST_BUFSIZE 512
 #define SUIT_MSG_TRIGGER 0x12345
 
+static int _suit_flashwrite(void *arg, size_t offset, uint8_t *buf, size_t len, int more);
 static char _stack[SUIT_COAP_STACKSIZE];
 static char _url[SUIT_URL_MAX];
 static uint8_t _manifest_buf[SUIT_MANIFEST_BUFSIZE];
@@ -55,7 +58,6 @@ static void _suit_handle_url(const char *url)
     if (size >= 0) {
         LOG_INFO("suit_coap: got manifest with size %u\n", (unsigned)size);
 
-#ifdef MODULE_SUIT_V1
         suit_v1_cbor_manifest_t manifest_v1;
         ssize_t res;
 
@@ -64,20 +66,65 @@ static void _suit_handle_url(const char *url)
             return;
         }
 
-        if ((res = suit_v1_cbor_get_url(&manifest_v1, _url, SUIT_URL_MAX)) <= 0) {
+        if ((res = suit_v1_cbor_get_url(&manifest_v1, _url, SUIT_URL_MAX -1)) <= 0) {
             printf("suit_v1_cbor_get_url() failed res=%i\n", res);
             return;
         }
+        assert (res < SUIT_URL_MAX);
+        _url[res] = '\0';
 
-        LOG_INFO("suit_coap: got image URL: \"%.*s\"\n", size, _url);
-#else
-        LOG_INFO("suit_coap: no suit parser installed, doing nothing\n");
-#endif
+        LOG_INFO("suit_coap: got image URL(len=%u): \"%s\"\n", (unsigned)res, _url);
+        riotboot_flashwrite_t writer;
+        riotboot_flashwrite_init(&writer, riotboot_slot_other());
+        res = nanocoap_get_blockwise_url(_url, COAP_BLOCKSIZE_64, _suit_flashwrite,
+                                         &writer);
 
+        if (res == 0) {
+            LOG_INFO("suit_coap: finalizing image flash\n");
+            riotboot_flashwrite_finish(&writer);
+
+            const riotboot_hdr_t *hdr = riotboot_slot_get_hdr(riotboot_slot_other());
+            riotboot_hdr_print(hdr);
+            xtimer_sleep(1);
+
+            if (riotboot_hdr_validate(hdr) == 0) {
+                LOG_INFO("suit_coap: rebooting...");
+                pm_reboot();
+            }
+            else {
+                LOG_INFO("suit_coap: update failed, hdr invalid");
+            }
+        }
     }
     else {
         LOG_INFO("suit_coap: error getting manifest\n");
     }
+}
+
+static int _suit_flashwrite(void *arg, size_t offset, uint8_t *buf, size_t len,
+                            int more)
+{
+    riotboot_flashwrite_t *writer = arg;
+
+    if (offset == 0) {
+        if (len < RIOTBOOT_FLASHWRITE_SKIPLEN) {
+            LOG_WARNING("_suit_flashwrite(): offset==0, len<4. aborting\n");
+            return -1;
+        }
+        offset = RIOTBOOT_FLASHWRITE_SKIPLEN;
+        buf += RIOTBOOT_FLASHWRITE_SKIPLEN;
+        len -= RIOTBOOT_FLASHWRITE_SKIPLEN;
+    }
+
+    if (writer->offset != offset) {
+        LOG_WARNING("_suit_flashwrite(): writer->offset=%u, offset==%u, aborting\n",
+                    (unsigned)writer->offset, (unsigned)offset);
+        return -1;
+    }
+
+    DEBUG("_suit_flashwrite(): writing %u bytes at pos %u\n", len, offset);
+
+    return riotboot_flashwrite_putbytes(writer, buf, len, more);
 }
 
 static void *_suit_coap_thread(void *arg)
