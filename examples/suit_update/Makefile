@@ -45,7 +45,7 @@ USEMODULE += suit suit_coap suit_v1
 
 ifneq (native,$(BOARD))
   FEATURES_REQUIRED += riotboot
-  USEMODULE += riotboot_slot
+  USEMODULE += riotboot_slot riotboot_flashwrite
 endif
 
 # Change this to 0 show compiler invocation lines by default:
