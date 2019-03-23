@@ -37,6 +37,7 @@ int main(void)
 {
     puts("RIOT SUIT update example application");
     printf("running from slot %u\n", riotboot_slot_current());
+    printf("slot start addr = %p\n", (void *)riotboot_slot_get_hdr(riotboot_slot_current()));
 
     /* nanocoap_server uses gnrc sock which uses gnrc which needs a msg queue */
     msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
