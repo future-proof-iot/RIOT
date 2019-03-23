@@ -128,7 +128,8 @@ riotboot/slot1: $(SLOT1_RIOT_BIN)
 riotboot/flash: riotboot/flash-slot0 riotboot/flash-bootloader
 
 # include suit targets
-include $(RIOTMAKE)/suit.inc.mk
+#include $(RIOTMAKE)/suit.inc.mk
+include $(RIOTMAKE)/suit.v4.inc.mk
 
 else
 riotboot:
