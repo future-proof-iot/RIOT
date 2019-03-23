@@ -4,6 +4,6 @@ SUBMODULES := 1
 # necessary to not fail for suit_v1_*.
 SUBMODULES_NOFORCE := 1
 
-DIRS += v1
+DIRS += v1 v4
 
 include $(RIOTBASE)/Makefile.base

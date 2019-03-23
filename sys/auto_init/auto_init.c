@@ -546,4 +546,8 @@ void auto_init(void)
     extern void suit_v1_init_conditions(void);
     suit_v1_init_conditions();
 #endif /* MODULE_SUIT_V1 */
+#ifdef MODULE_SUIT_V4
+    extern void suit_v4_init_conditions(void);
+    suit_v4_init_conditions();
+#endif /* MODULE_SUIT_V4 */
 }
