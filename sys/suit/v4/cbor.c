@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Freie Universit‰t Berlin
+ * Copyright (C) 2018 Freie Universit√§t Berlin
  * Copyright (C) 2018 Inria
  *               2019 Kaspar Schleiser <kaspar@schleiser.de>
  *
@@ -28,6 +28,8 @@
 #include "suit/v4/policy.h"
 #include "cbor.h"
 
+#include "log.h"
+
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
@@ -37,7 +39,7 @@ static suit_manifest_handler_t _manifest_get_auth_wrapper_handler(int key);
 int cbor_map_iterate_init(CborValue *map, CborValue *it)
 {
     if (!cbor_value_is_map(it)) {
-        puts("suit_v4_parse(): manifest not an map");
+        LOG_INFO("suit_v4_parse(): manifest not an map\n)");
         return SUIT_ERR_INVALID_MANIFEST;
     }
 
@@ -154,7 +156,7 @@ static int _v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf,
         return SUIT_ERR_INVALID_MANIFEST;
     }
 
-    puts("jumping into map");
+    LOG_INFO("jumping into map\n)");
 
     while (cbor_map_iterate(&map, &key, &value)) {
         int integer_key;
@@ -168,7 +170,7 @@ static int _v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf,
             int res = handler(manifest, integer_key, &value);
             printf("handler res=%i\n", res);
             if (res < 0) {
-                puts("handler returned <0");
+                LOG_INFO("handler returned <0\n)");
                 return SUIT_ERR_INVALID_MANIFEST;
             }
         }
