@@ -64,3 +64,6 @@ results/
 
 # mypy artifacts
 .mypy_cache/
+
+# suit manidest secret key
+secret.key
