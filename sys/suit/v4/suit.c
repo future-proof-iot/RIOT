@@ -3,6 +3,8 @@
 #include "suit/v4/suit.h"
 #include "suit/v4/policy.h"
 
+#include "log.h"
+
 #define SUIT_DEVID_BYTES 32
 
 static suit_v4_condition_params_t _conditions;
@@ -43,11 +45,11 @@ uuid_t *suit_v4_get_device_id(void)
 int suit_v4_policy_check(suit_v4_manifest_t *manifest)
 {
     if (SUIT_DEFAULT_POLICY & ~(manifest->validated)) {
-        puts("SUIT policy check failed!");
+        LOG_INFO("SUIT policy check failed!\n");
         return -1;
     }
     else {
-        puts("SUIT policy check OK.");
+        LOG_INFO("SUIT policy check OK.\n");
         return 0;
     }
 }

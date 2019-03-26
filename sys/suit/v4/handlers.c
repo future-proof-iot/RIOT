@@ -28,6 +28,8 @@
 #include "riotboot/slot.h"
 #include "cbor.h"
 
+#include "log.h"
+
 #define HELLO_HANDLER_MAX_STRLEN 32
 
 static int _handle_command_sequence(suit_v4_manifest_t *manifest, CborValue *it,
@@ -45,11 +47,11 @@ static int _hello_handler(suit_v4_manifest_t *manifest, int key, CborValue *it)
 
     if (cbor_value_is_text_string(it)) {
         cbor_value_copy_text_string(it, buf, &len, NULL);
-        printf("HELLO: \"%.*s\"\n", len, buf);
+        LOG_INFO("HELLO: \"%.*s\"\n", len, buf);
         return SUIT_OK;
     }
     else {
-        printf("_hello_handler(): unexpected value type: %u\n", cbor_value_get_type(
+        LOG_INFO("_hello_handler(): unexpected value type: %u\n", cbor_value_get_type(
                    it));
         return -1;
     }
@@ -63,17 +65,17 @@ static int _validate_uuid(suit_v4_manifest_t *manifest, CborValue *it, uuid_t *u
     size_t len = sizeof(uuid_t);
     cbor_value_copy_byte_string(it, (uint8_t*)&uuid_manifest, &len, NULL);
     uuid_to_string(&uuid_manifest, uuid_str);
-    printf("Comparing to %s from manifest\n", uuid_str);
+    LOG_INFO("Comparing to %s from manifest\n", uuid_str);
     return uuid_equal(uuid, &uuid_manifest) ? 0 : -1;
 }
 
 static int _cond_vendor_handler(suit_v4_manifest_t *manifest, int key, CborValue *it)
 {
     (void)key;
-    printf("validating vendor ID\n");
+    LOG_INFO("validating vendor ID\n");
     int rc = _validate_uuid(manifest, it, suit_v4_get_vendor_id());
     if (rc == SUIT_OK) {
-        printf("validating vendor ID: OK\n");
+        LOG_INFO("validating vendor ID: OK\n");
         manifest->validated |= SUIT_VALIDATED_VENDOR;
     }
     return rc;
@@ -82,10 +84,10 @@ static int _cond_vendor_handler(suit_v4_manifest_t *manifest, int key, CborValue
 static int _cond_device_handler(suit_v4_manifest_t *manifest, int key, CborValue *it)
 {
     (void)key;
-    printf("validating device ID\n");
+    LOG_INFO("validating device ID\n");
     int rc = _validate_uuid(manifest, it, suit_v4_get_device_id());
     if (rc == SUIT_OK) {
-        printf("validating device ID: OK\n");
+        LOG_INFO("validating device ID: OK\n");
         manifest->validated |= SUIT_VALIDATED_DEVICE;
     }
     return rc;
@@ -94,10 +96,10 @@ static int _cond_device_handler(suit_v4_manifest_t *manifest, int key, CborValue
 static int _cond_class_handler(suit_v4_manifest_t *manifest, int key, CborValue *it)
 {
     (void)key;
-    printf("validating class id\n");
+    LOG_INFO("validating class id\n");
     int rc = _validate_uuid(manifest, it, suit_v4_get_class_id());
     if (rc == SUIT_OK) {
-        printf("validating class id: OK\n");
+        LOG_INFO("validating class id: OK\n");
         manifest->validated |= SUIT_VALIDATED_CLASS;
     }
     return rc;
@@ -110,7 +112,7 @@ static int _cond_comp_offset(suit_v4_manifest_t *manifest, int key, CborValue *i
     uint32_t offset;
     suit_cbor_get_uint32(it, &offset);
     uint32_t other_offset = (uint32_t)riotboot_slot_get_hdr(riotboot_slot_other());
-    printf("Comparing manifest offset %u with other slot offset %u\n",
+    LOG_INFO("Comparing manifest offset %u with other slot offset %u\n",
            (unsigned)offset, (unsigned)other_offset);
     return other_offset == offset ? 0 : -1;
 }
@@ -119,12 +121,12 @@ static int _dtv_set_comp_idx(suit_v4_manifest_t *manifest, int key, CborValue *i
 {
     (void)key;
     if (cbor_value_is_boolean(it)) {
-        puts("_dtv_set_comp_idx() ignoring boolean");
+        LOG_INFO("_dtv_set_comp_idx() ignoring boolean\n)");
         return 0;
     }
     int res = suit_cbor_get_int(it, &manifest->component_current);
     if (!res) {
-        printf("Setting component index to %d\n", manifest->component_current);
+        LOG_INFO("Setting component index to %d\n", manifest->component_current);
     }
     return res;
 }
@@ -132,7 +134,7 @@ static int _dtv_set_comp_idx(suit_v4_manifest_t *manifest, int key, CborValue *i
 static int _dtv_run_seq_cond(suit_v4_manifest_t *manifest, int key, CborValue *it)
 {
     (void)key;
-    printf("Starting conditional sequence handler\n");
+    LOG_INFO("Starting conditional sequence handler\n");
     _handle_command_sequence(manifest, it, _common_sequence_handler);
     return 0;
 }
@@ -159,8 +161,8 @@ static int _dtv_set_param(suit_v4_manifest_t *manifest, int key, CborValue *it)
     int param_key;
     suit_cbor_get_int(&map, &param_key);
     cbor_value_advance(&map);
-    printf("Setting component index to %d\n", manifest->component_current);
-    printf("param_key=%i\n", param_key);
+    LOG_INFO("Setting component index to %d\n", manifest->component_current);
+    LOG_INFO("param_key=%i\n", param_key);
     int res;
     switch (param_key) {
         case 6: /* SUIT URI LIST */
@@ -180,7 +182,7 @@ static int _dtv_set_param(suit_v4_manifest_t *manifest, int key, CborValue *it)
 static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
 {
     (void)key; (void)_it; (void)manifest;
-    printf("_dtv_fetch() key=%i\n", key);
+    LOG_INFO("_dtv_fetch() key=%i\n", key);
 
     const uint8_t *url;
     size_t url_len;
@@ -197,21 +199,21 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
         /* open sequence qith cbor parser */
         int err = suit_cbor_subparse(&parser, &manifest->components[0].url, &it);
         if (err < 0) {
-            puts("subparse failed");
+            LOG_INFO("subparse failed\n)");
             return err;
         }
 
         /* confirm the document contains an array */
         if (!cbor_value_is_array(&it)) {
-            puts("url list no array");
-            printf("type: %u\n", cbor_value_get_type(&it));
+            LOG_INFO("url list no array\n)");
+            LOG_INFO("type: %u\n", cbor_value_get_type(&it));
         }
 
         /* enter container, confirm it is an array, too */
         CborValue url_it;
         cbor_value_enter_container(&it, &url_it);
         if (!cbor_value_is_array(&url_it)) {
-            puts("url entry no array");
+            LOG_INFO("url entry no array\n)");
         }
 
         /* expect two entries: priority as int, url as byte string. bail out if not. */
@@ -227,25 +229,25 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
 
         int res = suit_cbor_get_string(&url_value_it, &url, &url_len);
         if (res) {
-            puts("error parsing URL");
+            LOG_INFO("error parsing URL\n)");
             return -1;
         }
         if (url_len >= manifest->urlbuf_len) {
-            puts("url too large");
+            LOG_INFO("url too large\n)");
             return -1;
         }
         memcpy(manifest->urlbuf, url, url_len);
         manifest->urlbuf[url_len] = '\0';
     }
 
-    printf("_dtv_fetch() fetching \"%s\" (url_len=%u)\n", manifest->urlbuf, (unsigned)url_len);
+    LOG_INFO("_dtv_fetch() fetching \"%s\" (url_len=%u)\n", manifest->urlbuf, (unsigned)url_len);
 
     riotboot_flashwrite_init(manifest->writer, riotboot_slot_other());
     int res = nanocoap_get_blockwise_url(manifest->urlbuf, COAP_BLOCKSIZE_64, suit_flashwrite_helper,
             manifest->writer);
 
     if (res == 0) {
-        puts("image download successful");
+        LOG_INFO("image download successful\n)");
         manifest->state |= SUIT_MANIFEST_HAVE_IMAGE;
         return res;
     }
@@ -265,7 +267,7 @@ static int _version_handler(suit_v4_manifest_t *manifest, int key,
         if (version == SUIT_VERSION) {
             manifest->validated |= SUIT_VALIDATED_VERSION;
             return 0;
-            puts("suit: validated manifest version");
+            LOG_INFO("suit: validated manifest version\n)");
         }
         else {
             return -1;
@@ -286,25 +288,25 @@ static int _seq_no_handler(suit_v4_manifest_t *manifest, int key, CborValue *it)
 
         const riotboot_hdr_t *hdr = riotboot_slot_get_hdr(riotboot_slot_current());
         if (seq_nr <= (int64_t)hdr->version) {
-            printf("%"PRIu64" <= %"PRIu32"\n", seq_nr, hdr->version);
-            puts("seq_nr <= running image");
+            LOG_INFO("%"PRIu64" <= %"PRIu32"\n", seq_nr, hdr->version);
+            LOG_INFO("seq_nr <= running image\n)");
             return -1;
         }
 
         hdr = riotboot_slot_get_hdr(riotboot_slot_other());
         if (riotboot_hdr_validate(hdr) == 0) {
             if (seq_nr <= (int64_t)hdr->version) {
-                printf("%"PRIu64" <= %"PRIu32"\n", seq_nr, hdr->version);
-                puts("seq_nr <= other image");
+                LOG_INFO("%"PRIu64" <= %"PRIu32"\n", seq_nr, hdr->version);
+                LOG_INFO("seq_nr <= other image\n)");
                 return -1;
             }
         }
 
-        puts("suit: validated sequence number");
+        LOG_INFO("suit: validated sequence number\n)");
         manifest->validated |= SUIT_VALIDATED_SEQ_NR;
         return 0;
     }
-    printf("Unable to get sequence number\n");
+    LOG_INFO("Unable to get sequence number\n");
     return -1;
 }
 
@@ -326,9 +328,9 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
 
     CborValue arr;
 
-    puts("storing components");
+    LOG_INFO("storing components\n)");
     if (!cbor_value_is_array(it)) {
-        printf("components field not an array\n");
+        LOG_INFO("components field not an array\n");
         return -1;
     }
     cbor_value_enter_container(it, &arr);
@@ -340,7 +342,7 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
             manifest->components_len += 1;
         }
         else {
-            puts("too many components");
+            LOG_INFO("too many components\n)");
             return SUIT_ERR_INVALID_MANIFEST;
         }
 
@@ -366,10 +368,10 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
                     current->digest = value;
                     break;
                 default:
-                    printf("ignoring unexpected component data (nr. %i)\n", integer_key);
+                    LOG_INFO("ignoring unexpected component data (nr. %i)\n", integer_key);
             }
 
-            printf("component %u parsed\n", n);
+            LOG_INFO("component %u parsed\n", n);
         }
 
         cbor_value_advance(&arr);
@@ -379,7 +381,7 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
     manifest->state |= SUIT_MANIFEST_HAVE_COMPONENTS;
     cbor_value_enter_container(&arr, it);
 
-    puts("storing components done");
+    LOG_INFO("storing components done\n)");
     return 0;
 }
 
@@ -440,12 +442,12 @@ static int _common_sequence_handler(suit_v4_manifest_t *manifest, int key, CborV
 {
 
     suit_manifest_handler_t handler = _suit_manifest_get_handler(key, _sequence_handlers, _sequence_handlers_len);
-    printf("Handling handler with key %d at %p\n", key, handler);
+    LOG_INFO("Handling handler with key %d at %p\n", key, handler);
     if (handler) {
         return handler(manifest, key, it);
     }
     else {
-        printf("Sequence handler not implemented, ID: %d\n", key);
+        LOG_INFO("Sequence handler not implemented, ID: %d\n", key);
         return -1;
     }
 }
@@ -460,7 +462,7 @@ int _handle_command_sequence(suit_v4_manifest_t *manifest, CborValue *bseq,
         suit_manifest_handler_t handler)
 {
 
-    printf("Handling command sequence\n");
+    LOG_INFO("Handling command sequence\n");
     CborParser parser;
     CborValue it, arr;
 
@@ -470,7 +472,7 @@ int _handle_command_sequence(suit_v4_manifest_t *manifest, CborValue *bseq,
     }
 
     if (!cbor_value_is_array(&it)) {
-        printf("Not an byte array\n");
+        LOG_INFO("Not an byte array\n");
         return -1;
     }
     cbor_value_enter_container(&it, &arr);
@@ -489,7 +491,7 @@ int _handle_command_sequence(suit_v4_manifest_t *manifest, CborValue *bseq,
         cbor_value_advance(&map);
         int res = handler(manifest, integer_key, &map);
         if (res < 0) {
-            printf("Sequence handler error\n");
+            LOG_INFO("Sequence handler error\n");
             return res;
         }
         cbor_value_advance(&map);
