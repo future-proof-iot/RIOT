@@ -111,7 +111,8 @@ static int _cond_comp_offset(suit_v4_manifest_t *manifest, int key, CborValue *i
     (void)key;
     uint32_t offset;
     suit_cbor_get_uint32(it, &offset);
-    uint32_t other_offset = (uint32_t)riotboot_slot_get_hdr(riotboot_slot_other());
+    uint32_t other_offset = (uint32_t)riotboot_slot_get_hdr(riotboot_slot_other()) \
+                            - CPU_FLASH_BASE;
     LOG_INFO("Comparing manifest offset %u with other slot offset %u\n",
            (unsigned)offset, (unsigned)other_offset);
     return other_offset == offset ? 0 : -1;
