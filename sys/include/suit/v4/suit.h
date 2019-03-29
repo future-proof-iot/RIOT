@@ -35,25 +35,6 @@ extern "C" {
 #define SUIT_V4_COMPONENT_MAX 1
 
 /**
- * @brief The SUIT vendor ID source
- *
- * The basis of the UUID must be the vendor domain, please change this when
- * using this module in a product
- */
-#ifndef SUIT_VENDOR_DOMAIN
-#define SUIT_VENDOR_DOMAIN  "riot-os.org" /**< Device vendor domain */
-#endif
-
-/**
- * @brief The SUIT class ID source
- *
- * By default the RIOT_VERSION define is used for this
- */
-#ifndef SUIT_CLASS_ID
-#define SUIT_CLASS_ID  RIOT_BOARD
-#endif
-
-/**
  * @brief Supported SUIT manifest version
  */
 #define SUIT_MANIFEST_VERSION        4
@@ -76,25 +57,6 @@ typedef enum {
  * @brief TinyCBOR validation mode to use
  */
 #define SUIT_TINYCBOR_VALIDATION_MODE       CborValidateStrictMode
-
-/**
- * @brief SUIT conditionals
- */
-enum {
-    SUIT_COND_VENDOR_ID     = 1,    /**< Vendor ID match conditional */
-    SUIT_COND_CLASS_ID      = 2,    /**< Class ID match conditional */
-    SUIT_COND_DEV_ID        = 3,    /**< Device ID match conditional */
-    SUIT_COND_BEST_BEFORE   = 4,    /**< Best before conditional */
-};
-
-/**
- * @brief SUIT condition parameters
- */
-typedef struct {
-    uuid_t vendor;  /**< Vendor url as UUID                  */
-    uuid_t class;   /**< Device class UUID                   */
-    uuid_t device;  /**< Device specific information as UUID */
-} suit_v4_condition_params_t;
 
 /**
  * @brief SUIT payload digest algorithms
@@ -175,11 +137,6 @@ typedef struct {
 int suit_v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf, size_t len);
 
 int suit_v4_policy_check(suit_v4_manifest_t *manifest);
-
-void suit_v4_init_conditions(void);
-uuid_t *suit_v4_get_vendor_id(void);
-uuid_t *suit_v4_get_class_id(void);
-uuid_t *suit_v4_get_device_id(void);
 
 int cbor_map_iterate_init(CborValue *map, CborValue *it);
 int cbor_map_iterate(CborValue *map, CborValue *key, CborValue *value);
