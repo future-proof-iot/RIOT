@@ -880,6 +880,19 @@ ifneq (,$(filter suit_v4_%,$(USEMODULE)))
   USEMODULE += suit_v4
 endif
 
+ifneq (,$(filter suit_v4,$(USEMODULE)))
+  USEMODULE += suit_conditions
+  USEPKG += tinycbor
+endif
+
+ifneq (,$(filter suit_conditions,$(USEMODULE)))
+  USEMODULE += uuid
+endif
+
+ifneq (,$(filter suit_%,$(USEMODULE)))
+  USEMODULE += suit
+endif
+
 # Enable periph_gpio when periph_gpio_irq is enabled
 ifneq (,$(filter periph_gpio_irq,$(USEMODULE)))
   FEATURES_REQUIRED += periph_gpio

@@ -547,12 +547,8 @@ void auto_init(void)
 
 #endif /* MODULE_AUTO_INIT_CAN */
 
-#ifdef MODULE_SUIT_V1
-    extern void suit_v1_init_conditions(void);
-    suit_v1_init_conditions();
-#endif /* MODULE_SUIT_V1 */
-#ifdef MODULE_SUIT_V4
-    extern void suit_v4_init_conditions(void);
-    suit_v4_init_conditions();
-#endif /* MODULE_SUIT_V4 */
+#ifdef MODULE_SUIT
+    extern void suit_init_conditions(void);
+    suit_init_conditions();
+#endif /* MODULE_SUIT */
 }

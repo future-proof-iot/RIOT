@@ -20,6 +20,7 @@
 #include <inttypes.h>
 
 #include "net/nanocoap_sock.h"
+#include "suit/conditions.h"
 #include "suit/v4/suit.h"
 #include "suit/v4/handlers.h"
 #include "suit/v4/policy.h"
@@ -73,7 +74,7 @@ static int _cond_vendor_handler(suit_v4_manifest_t *manifest, int key, CborValue
 {
     (void)key;
     LOG_INFO("validating vendor ID\n");
-    int rc = _validate_uuid(manifest, it, suit_v4_get_vendor_id());
+    int rc = _validate_uuid(manifest, it, suit_get_vendor_id());
     if (rc == SUIT_OK) {
         LOG_INFO("validating vendor ID: OK\n");
         manifest->validated |= SUIT_VALIDATED_VENDOR;
@@ -85,7 +86,7 @@ static int _cond_device_handler(suit_v4_manifest_t *manifest, int key, CborValue
 {
     (void)key;
     LOG_INFO("validating device ID\n");
-    int rc = _validate_uuid(manifest, it, suit_v4_get_device_id());
+    int rc = _validate_uuid(manifest, it, suit_get_device_id());
     if (rc == SUIT_OK) {
         LOG_INFO("validating device ID: OK\n");
         manifest->validated |= SUIT_VALIDATED_DEVICE;
@@ -97,7 +98,7 @@ static int _cond_class_handler(suit_v4_manifest_t *manifest, int key, CborValue 
 {
     (void)key;
     LOG_INFO("validating class id\n");
-    int rc = _validate_uuid(manifest, it, suit_v4_get_class_id());
+    int rc = _validate_uuid(manifest, it, suit_get_class_id());
     if (rc == SUIT_OK) {
         LOG_INFO("validating class id: OK\n");
         manifest->validated |= SUIT_VALIDATED_CLASS;
