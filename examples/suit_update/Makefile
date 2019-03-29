@@ -41,13 +41,13 @@ USEMODULE += shell_commands
 #
 
 USEMODULE += nanocoap_sock sock_util
+USEMODULE += suit suit_coap
 
 # v1:
-#USEMODULE += suit suit_coap suit_v1
+#USEMODULE += suit_v1
 
 # v4:
-USEMODULE += suit suit_coap suit_v4_cbor uuid
-USEPKG += tinycbor
+USEMODULE += suit_v4
 
 ifneq (native,$(BOARD))
   FEATURES_REQUIRED += riotboot
