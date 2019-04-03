@@ -24,12 +24,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "cose/sign.h"
 #include "cbor.h"
 #include "uuid.h"
 #include "riotboot/flashwrite.h"
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef SUIT_COSE_BUF_SIZE
+#define SUIT_COSE_BUF_SIZE      512
 #endif
 
 #define SUIT_V4_COMPONENT_MAX 1
@@ -51,6 +56,7 @@ typedef enum {
     SUIT_ERR_COND               = -4,   /**< Conditionals evaluate to false */
     SUIT_ERR_SEQUENCE_NUMBER    = -5,   /**< Sequence number less or equal to
                                              current sequence number */
+    SUIT_ERR_SIGNATURE          = -6,   /**< Unable to verify signature */
 } suit_v4_error_t;
 
 /**
@@ -104,6 +110,7 @@ typedef struct {
  * @brief SUIT manifest struct
  */
 typedef struct {
+    cose_sign_t cose;   /**< COSE signature validation struct */
     const uint8_t *buf; /**< ptr to the buffer of the manifest */
     size_t len;         /**< length of the manifest */
     uint32_t validated; /**< bitfield of validated policies */
@@ -114,6 +121,8 @@ typedef struct {
     unsigned components_len;
     int component_current;
     riotboot_flashwrite_t *writer;
+    uint8_t validation_buf[SUIT_COSE_BUF_SIZE];
+    cose_key_t *key;    /**< Ptr to the public key for validation */
     char *urlbuf;
     size_t urlbuf_len;
 } suit_v4_manifest_t;
