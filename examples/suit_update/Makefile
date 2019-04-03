@@ -48,6 +48,8 @@ USEMODULE += suit suit_coap
 
 # v4:
 USEMODULE += suit_v4
+INCLUDES += -I$(CURDIR) # Include public_key.h in the path
+
 
 ifneq (native,$(BOARD))
   FEATURES_REQUIRED += riotboot
