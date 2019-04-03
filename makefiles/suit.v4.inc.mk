@@ -7,11 +7,18 @@ SUIT_COAP_FSROOT ?= $(RIOTBASE)/coaproot
 #
 SUIT_MANIFEST ?= $(BINDIR_APP)-riot.suitv4.$(APP_VER).bin
 SUIT_MANIFEST_LATEST ?= $(BINDIR_APP)-riot.suitv4.latest.bin
+SUIT_MANIFEST_SIGNED ?= $(BINDIR_APP)-riot.suitv4_signed.$(APP_VER).bin
+SUIT_MANIFEST_SIGNED_LATEST ?= $(BINDIR_APP)-riot.suitv4_signed.latest.bin
 
 SUIT_VENDOR ?= "riot-os.org"
 SUIT_SEQNR ?= $(APP_VER)
 SUIT_DEVICE_ID ?= $(BOARD)
 SUIT_KEY ?= secret.key
+SUIT_PUB ?= public.key
+SUIT_PUB_HDR ?= public_key.h
+
+$(SUIT_PUB_HDR):
+	xxd -i $(SUIT_PUB) > $@
 
 $(SUIT_MANIFEST): $(SLOT0_RIOT_BIN) $(SLOT1_RIOT_BIN)
 	$(RIOTBASE)/dist/tools/suit_v4/gen_manifest.py \
@@ -24,11 +31,20 @@ $(SUIT_MANIFEST): $(SLOT0_RIOT_BIN) $(SLOT1_RIOT_BIN)
 	  -o $@ \
 	  $^
 
+$(SUIT_MANIFEST_SIGNED): $(SUIT_MANIFEST)
+	python $(RIOTBASE)/dist/tools/suit_v4/sign-04.py \
+	  $(SUIT_KEY) $(SUIT_PUB) $< $@
+
 $(SUIT_MANIFEST_LATEST): $(SUIT_MANIFEST)
+	@ln -f -s $< $@
+
+$(SUIT_MANIFEST_SIGNED_LATEST): $(SUIT_MANIFEST_SIGNED)
 	@ln -f -s $< $@
 
 SUIT_MANIFESTS := $(SUIT_MANIFEST) \
                   $(SUIT_MANIFEST_LATEST) \
+		  $(SUIT_MANIFEST_SIGNED) \
+		  $(SUIT_MANIFEST_SIGNED_LATEST)
 
 suit/manifest: $(SUIT_MANIFESTS)
 
@@ -47,4 +63,4 @@ suit/notify: | $(filter suit/publish, $(MAKECMDGOALS))
 		echo "Triggered $(SUIT_CLIENT) to update."
 
 suit/genkey:
-	$(RIOTBASE)/dist/tools/suit_v1/gen_key.py
+	$(RIOTBASE)/dist/tools/suit_v4/gen_key.py
