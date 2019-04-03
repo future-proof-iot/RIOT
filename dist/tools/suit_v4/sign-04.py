@@ -30,6 +30,7 @@ import sys
 import ed25519
 import eddsa
 import copy
+from pprint import pprint
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -49,7 +50,8 @@ EDDSA = -8
 def signWrapper(algo, private_key, public_key, encwrapper):
     wrapper = cbor.loads(encwrapper)
 
-    COSE_Sign = cbor.loads(copy.deepcopy(wrapper[1]))
+    pprint(wrapper[1])
+    COSE_Sign = copy.deepcopy(wrapper[1])
     if not COSE_Sign:
         protected = cbor.dumps({
             3: APPLICATION_OCTET_STREAM_ID, # Content Type
@@ -120,7 +122,7 @@ def main():
             private_key = serialization.load_pem_private_key(priv_key_bytes, password=None, backend=default_backend())
         except ValueError:
             algo = EDDSA
-            private_key = ed25519.SigningKey(eddsa.parse_privkey(priv_key_bytes))
+            private_key = ed25519.SigningKey(priv_key_bytes)
 
 
     public_key = None
@@ -129,7 +131,7 @@ def main():
         try:
             public_key = serialization.load_pem_public_key(pub_key_bytes, backend=default_backend())
         except ValueError:
-            public_key = ed25519.VerifyingKey(eddsa.parse_pubkey(pub_key_bytes))
+            public_key = ed25519.VerifyingKey(pub_key_bytes)
 
     # Read the input file
     doc = None
