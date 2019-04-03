@@ -21,8 +21,9 @@ def str2int(x):
 @click.option("--output", "-o", type=click.File(mode="wb"))
 @click.option("--uuid-vendor", "-V", required=True)
 @click.option("--uuid-class", "-C",  required=True)
+@click.option("--keyfile", "-K",  required=False, type=click.File())
 @click.argument("slotfiles", nargs=2, type=click.Path())
-def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor, uuid_class):
+def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor, uuid_class, keyfile):
 
     uuid_vendor = uuid.uuid5(uuid.NAMESPACE_DNS, uuid_vendor)
     uuid_class = uuid.uuid5(uuid_vendor, uuid_class)
