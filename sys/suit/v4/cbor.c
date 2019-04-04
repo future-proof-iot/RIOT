@@ -203,11 +203,13 @@ static int _auth_handler(suit_v4_manifest_t *manifest, int key, CborValue *it)
     int res = suit_cbor_get_string(it, &cose_buf, &cose_len);
 
     if (res < 0) {
+        LOG_INFO("Unable to get COSE signature\n");
         return SUIT_ERR_INVALID_MANIFEST;
     }
     cose_sign_init(&manifest->cose, 0);
     res = cose_sign_decode(&manifest->cose, cose_buf, cose_len);
     if (res < 0) {
+        LOG_INFO("Unable to parse COSE signature\n");
         return SUIT_ERR_INVALID_MANIFEST;
     }
     return 0;
@@ -242,6 +244,7 @@ static int _manifest_handler(suit_v4_manifest_t *manifest, int key, CborValue *i
     int verification = cose_sign_verify(&manifest->cose, &signature,
             &pkey, manifest->validation_buf, SUIT_COSE_BUF_SIZE);
     if (verification != 0) {
+        LOG_INFO("Unable to validate signature\n");
         return SUIT_ERR_SIGNATURE;
     }
 
