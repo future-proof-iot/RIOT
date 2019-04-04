@@ -63,7 +63,7 @@ def signWrapper(algo, private_key, public_key, encwrapper):
         COSE_Sign = [
             protected,
             unprotected,
-            None,
+            b'',
             signatures
         ]
 
