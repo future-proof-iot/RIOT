@@ -63,10 +63,12 @@ static int _validate_uuid(suit_v4_manifest_t *manifest, CborValue *it, uuid_t *u
     (void)manifest;
     uuid_t uuid_manifest;
     char uuid_str[UUID_STR_LEN + 1];
+    char uuid_str2[UUID_STR_LEN + 1];
     size_t len = sizeof(uuid_t);
     cbor_value_copy_byte_string(it, (uint8_t*)&uuid_manifest, &len, NULL);
     uuid_to_string(&uuid_manifest, uuid_str);
-    LOG_INFO("Comparing to %s from manifest\n", uuid_str);
+    uuid_to_string(uuid, uuid_str2);
+    LOG_INFO("Comparing %s to %s from manifest\n", uuid_str2, uuid_str);
     return uuid_equal(uuid, &uuid_manifest) ? 0 : -1;
 }
 
