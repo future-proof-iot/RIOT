@@ -53,7 +53,7 @@ INCLUDES += -I$(CURDIR) # Include public_key.h in the path
 
 ifneq (native,$(BOARD))
   FEATURES_REQUIRED += riotboot
-  USEMODULE += riotboot_slot riotboot_flashwrite
+  USEMODULE += riotboot_slot riotboot_flashwrite riotboot_flashwrite_verify_sha256
 endif
 
 # Change this to 0 show compiler invocation lines by default:
