@@ -44,7 +44,7 @@
 #endif
 
 #define SUIT_URL_MAX            128
-#define SUIT_MANIFEST_BUFSIZE   512
+#define SUIT_MANIFEST_BUFSIZE   640
 #define SUIT_MSG_TRIGGER        0x12345
 
 static char _stack[SUIT_COAP_STACKSIZE];
