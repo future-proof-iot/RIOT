@@ -145,13 +145,26 @@ static int _dtv_run_seq_cond(suit_v4_manifest_t *manifest, int key, CborValue *i
 
 static int _param_get_uri_list(suit_v4_manifest_t *manifest, CborValue *it)
 {
+    LOG_INFO("got url list\n");
     manifest->components[manifest->component_current].url = *it;
     return 0;
 }
 static int _param_get_digest(suit_v4_manifest_t *manifest, CborValue *it)
 {
+    LOG_INFO("got digest\n");
     manifest->components[manifest->component_current].digest = *it;
     return 0;
+}
+
+static int _param_get_img_size(suit_v4_manifest_t *manifest, CborValue *it)
+{
+    int res = suit_cbor_get_uint32(it, &manifest->components[0].size);
+    if (res) {
+        LOG_INFO("error getting image size\n");
+        return res;
+    }
+    LOG_INFO("got img size\n");
+    return res;
 }
 
 static int _dtv_set_param(suit_v4_manifest_t *manifest, int key, CborValue *it)
@@ -161,26 +174,36 @@ static int _dtv_set_param(suit_v4_manifest_t *manifest, int key, CborValue *it)
     CborValue map;
 
     cbor_value_enter_container(it, &map);
-    /* map points to the key of the param */
-    int param_key;
-    suit_cbor_get_int(&map, &param_key);
-    cbor_value_advance(&map);
-    LOG_INFO("Setting component index to %d\n", manifest->component_current);
-    LOG_INFO("param_key=%i\n", param_key);
-    int res;
-    switch (param_key) {
-        case 6: /* SUIT URI LIST */
-            res = _param_get_uri_list(manifest, &map);
-            break;
-        case 11: /* SUIT DIGEST */
-            res = _param_get_digest(manifest, &map);
-            break;
-        default:
-            res = -1;
-    }
 
-    cbor_value_advance(&map);
-    return res;
+    while (!cbor_value_at_end(&map)) {
+        /* map points to the key of the param */
+        int param_key;
+        suit_cbor_get_int(&map, &param_key);
+        cbor_value_advance(&map);
+        LOG_INFO("Setting component index to %d\n", manifest->component_current);
+        LOG_INFO("param_key=%i\n", param_key);
+        int res;
+        switch (param_key) {
+            case 6: /* SUIT URI LIST */
+                res = _param_get_uri_list(manifest, &map);
+                break;
+            case 11: /* SUIT DIGEST */
+                res = _param_get_digest(manifest, &map);
+                break;
+            case 12: /* SUIT IMAGE SIZE */
+                res = _param_get_img_size(manifest, &map);
+                break;
+            default:
+                res = -1;
+        }
+
+        cbor_value_advance(&map);
+
+        if (res) {
+            return res;
+        }
+    }
+    return SUIT_OK;
 }
 
 static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
@@ -237,7 +260,7 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
             return -1;
         }
         if (url_len >= manifest->urlbuf_len) {
-            LOG_INFO("url too large\n)");
+            LOG_INFO("url too large: %u>%u\n)", (unsigned)url_len, (unsigned)manifest->urlbuf_len);
             return -1;
         }
         memcpy(manifest->urlbuf, url, url_len);
@@ -246,17 +269,33 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
 
     LOG_INFO("_dtv_fetch() fetching \"%s\" (url_len=%u)\n", manifest->urlbuf, (unsigned)url_len);
 
-    riotboot_flashwrite_init(manifest->writer, riotboot_slot_other());
+    int target_slot = riotboot_slot_other();
+    riotboot_flashwrite_init(manifest->writer, target_slot);
     int res = nanocoap_get_blockwise_url(manifest->urlbuf, COAP_BLOCKSIZE_64, suit_flashwrite_helper,
             manifest->writer);
 
-    if (res == 0) {
-        LOG_INFO("image download successful\n)");
-        manifest->state |= SUIT_MANIFEST_HAVE_IMAGE;
+    if (res) {
+        LOG_INFO("image download failed\n)");
         return res;
     }
 
-    return -1;
+    const uint8_t *digest;
+    size_t digest_len;
+
+    res = suit_cbor_get_string(&manifest->components[0].digest, &digest, &digest_len);
+    if (res) {
+        return res;
+    }
+
+    res = riotboot_flashwrite_verify_sha256(digest, manifest->components[0].size, target_slot);
+    if (res) {
+        LOG_INFO("image verification failed\n");
+        return res;
+    }
+
+    manifest->state |= SUIT_MANIFEST_HAVE_IMAGE;
+
+    return SUIT_OK;
 }
 
 static int _version_handler(suit_v4_manifest_t *manifest, int key,
@@ -366,7 +405,8 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
                     current->identifier = value;
                     break;
                 case SUIT_COMPONENT_SIZE:
-                    current->size = value;
+                    LOG_INFO("skipping SUIT_COMPONENT_SIZE");
+                    //current->size = value;
                     break;
                 case SUIT_COMPONENT_DIGEST:
                     current->digest = value;
