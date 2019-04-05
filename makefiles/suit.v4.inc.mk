@@ -64,3 +64,5 @@ suit/notify: | $(filter suit/publish, $(MAKECMDGOALS))
 
 suit/genkey:
 	$(RIOTBASE)/dist/tools/suit_v4/gen_key.py
+
+suit/keyhdr: suit/genkey $(SUIT_PUB_HDR)
