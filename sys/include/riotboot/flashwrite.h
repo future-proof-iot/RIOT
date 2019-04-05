@@ -169,6 +169,8 @@ static inline int riotboot_flashwrite_finish(riotboot_flashwrite_t *state)
  */
 size_t riotboot_flashwrite_slotsize(const riotboot_flashwrite_t *state);
 
+int riotboot_flashwrite_verify_sha256(const uint8_t *sha256_digest, size_t img_size, int target_slot);
+
 #ifdef __cplusplus
 }
 #endif
