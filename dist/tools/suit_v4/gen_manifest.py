@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import click
+import hashlib
 import os
 import sys
 import json
@@ -12,6 +13,11 @@ def str2int(x):
         return int(x, 16)
     else:
         return x
+
+def sha256_from_file(filepath):
+    sha256 = hashlib.sha256()
+    sha256.update(open(filepath, "rb").read())
+    return sha256.digest()
 
 @click.command()
 @click.option("--template", "-t", required=True, type=click.File())
@@ -49,7 +55,7 @@ def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor, uuid
             "file": filename,
             "uri": uri,
             "size" : size,
-            "digest" : b"foobar",
+            "digest" : sha256_from_file(slotfile),
             })
 
         template["components"][0]["images"][slot]["conditions"][0]["condition-component-offset"] = offset
