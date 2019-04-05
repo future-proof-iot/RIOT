@@ -2,7 +2,9 @@
 
 This example application shows how to integrate SUIT software updates into a
 RIOT application. This application will only be implementing basic v1 support of
-the [draft-moran-suit-manifest-00](https://datatracker.ietf.org/doc/draft-moran-suit-manifest/01/).
+the [draft-moran-suit-manifest-01](https://datatracker.ietf.org/doc/draft-moran-suit-manifest/01/)
+and the [draft-moran-suit-manifest-04](https://datatracker.ietf.org/doc/draft-moran-suit-manifest/04/).
+By Default we will use suit-v04.
 
 ## Prerequisites
 
@@ -12,6 +14,7 @@ Dependencies:
               - pyasn1  > 0.4.5
               - cbor    > 1.0.0 
               - aiocoap > 0.4
+              - Click   > 7.0
 
 When this was implemented aiocoap > 0.4 must be built from source you can follow 
 installation instructions here https://aiocoap.readthedocs.io/en/latest/installation.html.
@@ -29,7 +32,7 @@ server is used.
 
 In order to get a SUIT capable firmware onto the node. In examples/suit_update:
 
-    $ BOARD=samr21-xpro make  clean riotboot/flash -j4
+    $ BOARD=samr21-xpro make clean riotboot/flash -j4
 
 ### Setup network
 
@@ -121,8 +124,34 @@ reachable via link-local "fe80::2" on the ethos interface.
 
     $ SUIT_COAP_SERVER='[fd01::1]' SUIT_CLIENT=[fe80::2%riot0] BOARD=samr21-xpro make suit/notify
 
-This will notify the node of new available manifest and it will fetch it. It will
-take some time to fetch and write to flash, you will a series of messages like:
+This will notify the node of new available manifest and it will fetch it.
+
+If using suit-v4 the node will hang for a couple of seconds when verifying the signature:
+
+    ....
+    INFO # suit_coap: got manifest with size 545
+    INFO # jumping into map
+    INFO # )got key val=1
+    INFO # handler res=0
+    INFO # got key val=2
+    INFO # suit: verifying manifest signature...
+    ....
+
+Once the signature is validated it will continue validating other parts of tha manifest.
+Among these validation it will check some condition like the firmware offset position regarding
+to the running slot to see witch firmware image to fetch.
+
+    ....
+    INFO # Handling handler with key 10 at 0x2b981
+    INFO # Comparing manifest offset 4096 with other slot offset 4096
+    ....
+    INFO # Handling handler with key 10 at 0x2b981
+    INFO # Comparing manifest offset 133120 with other slot offset 4096
+    INFO # Sequence handler error
+    ....
+
+Once manifest validation finishes it will fetch the image and start flashing.
+It will take some time to fetch and write to flash, you will a series of messages like:
 
     ....
     riotboot_flashwrite: processing bytes 1344-1407
@@ -130,7 +159,25 @@ take some time to fetch and write to flash, you will a series of messages like:
     riotboot_flashwrite: processing bytes 1472-1535
     ...
 
-Once the new image is written, the device will reboot and display:
+Once the new image is written, final validation will be done and then
+thedevice will reboot and display:
+
+    2019-04-05 16:19:26,363 - INFO # riotboot: verifying digest at 0x20003f37 (img at: 0x20800 size: 80212)
+    2019-04-05 16:19:26,704 - INFO # handler res=0
+    2019-04-05 16:19:26,705 - INFO # got key val=10
+    2019-04-05 16:19:26,707 - INFO # no handler found
+    2019-04-05 16:19:26,708 - INFO # got key val=12
+    2019-04-05 16:19:26,709 - INFO # no handler found
+    2019-04-05 16:19:26,711 - INFO # handler res=0
+    2019-04-05 16:19:26,713 - INFO # suit_v4_parse() success
+    2019-04-05 16:19:26,715 - INFO # SUIT policy check OK.
+    2019-04-05 16:19:26,718 - INFO # suit_coap: finalizing image flash
+    2019-04-05 16:19:26,725 - INFO # riotboot_flashwrite: riotboot flashing completed successfully
+    2019-04-05 16:19:26,728 - INFO # Image magic_number: 0x544f4952
+    2019-04-05 16:19:26,730 - INFO # Image Version: 0x5ca76390
+    2019-04-05 16:19:26,733 - INFO # Image start address: 0x00020900
+    2019-04-05 16:19:26,738 - INFO # Header chksum: 0x13b466db
+
 
     main(): This is RIOT! (Version: 2019.04-devel-606-gaa7b-ota_suit_v2)
     RIOT SUIT update example application
@@ -153,6 +200,7 @@ in a RIOT application:
 * suit
     * suit_coap
     * suit_v1
+    * suit_v4
 
 ### riotboot
 
@@ -208,7 +256,7 @@ includes the sys/suit directory into the build system dirs.
 
 To enable support for suit_updates over coap a new thread is created.
 This thread will expose 4 suit related resources:
--=
+
 * /suit/slot/active: a resource that returns the number of their active slot
 * /suit/slot/inactive: a resource that returns the number of their inactive slot
 * /suit/trigger: this resource allows POST/PUT where the payload is assumed
@@ -221,9 +269,17 @@ When a new manifest url is received on the trigger resource a message is resent
 to the coap thread with the manifest's url. The thread will then fetch the
 manifest by a block coap request to the specified url.
 
-If suit_v1 is included the manifest will also be parsed.
-
 #### suit_v1
+
+To build using suit-v1 comment out the v4 secction in the Makefile and uncomment
+the v1 part so it looks like:
+
+    # v1:
+    USEMODULE += suit_v1
+
+    # v4:
+    # USEMODULE += suit_v4
+    # INCLUDES += -I$(CURDIR) # Include public_key.h in the path
 
 This includes v1 manifest support. When a url is received in the /suit/trigger
 coap resource it will trigger a coap blockwise fetch of the manifest. When this
@@ -234,17 +290,18 @@ It will then fetch the firmware, write it to the inactive slot and reboot the de
 From there the bootloader takes over, verifying the slot riotboot_hdr and boots
 from the newest image.
 
-#### pending v1 support
-
-Once the firmware location url is parsed it should fetch the firmware and copy it
-to the inactive slot. After copying ti should reboot so the device can boot
-from the new firmware image. This is handled by riotboot module.
-
 #### support for v4
 
-To support v4 most of the infrastructure is kept the same, you would have
-to implement handling of a v4 manifest and add it to _suit_handle_url() in
-sys/suit/coap.c.
+This includes v4 manifest support. When a url is received in the /suit/trigger
+coap resource it will trigger a coap blockwise fetch of the manifest. When this
+manifest is received it will be parsed. The signcature of the manifest will be
+verified and then the rest of the manifest contetn. If the received manifest is valid it
+will extract the url for the firmware location from the manifest.
+
+It will then fetch the firmware, write it to the inactive slot and reboot the device.
+Digest validation is done once all the firmware is written to flash.
+From there the bootloader takes over, verifying the slot riotboot_hdr and boots
+from the newest image.
 
 ## Network
 
@@ -317,6 +374,7 @@ suit/manifest: creates manifest for all slots and "latest" tag of each,
     uses following parameters:
 
     - $(SUIT_KEY): key to sign the manifest
+    - $(SUIT_PUB): public key used to verify the manifest
 	- $(SUIT_COAP_ROOT): coap root address
 	- $(SUIT_DEVICE_ID)
 	- $(SUIT_VERSION)
@@ -339,7 +397,9 @@ suit/notify: triggers a device update, it sends two requests:
 
     - $(SUIT_CLIENT): define the client ipv6 address
     - $(SUIT_COAP_ROOT): root url for the coap resources
-    - $(SLOTx_SUIT_MANIFEST_LATEST): name of the resource where the slotx
+    - $(SUIT_MANIFEST_LATEST: name of the resource where the latest non signed
+    manifest is exposed.
+    - $(SUIT_MANIFEST_SIGNED_LATES): name of the resource where the latest signed
     manifest is exposed.
 
 suit/genkey: this recipe generates a ed25519 key to sign the manifest
