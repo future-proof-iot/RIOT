@@ -100,7 +100,7 @@ enum {
  * @brief SUIT v4 component struct
  */
 typedef struct {
-    CborValue size;
+    uint32_t size;
     CborValue identifier;
     CborValue url;
     CborValue digest;
