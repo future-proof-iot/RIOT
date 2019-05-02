@@ -19,7 +19,7 @@
 
 #include <inttypes.h>
 
-#include "net/nanocoap_sock.h"
+#include "suit/coap.h"
 #include "suit/conditions.h"
 #include "suit/v4/suit.h"
 #include "suit/v4/handlers.h"
@@ -271,7 +271,7 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
 
     int target_slot = riotboot_slot_other();
     riotboot_flashwrite_init(manifest->writer, target_slot);
-    int res = nanocoap_get_blockwise_url(manifest->urlbuf, COAP_BLOCKSIZE_64, suit_flashwrite_helper,
+    int res = suit_coap_get_blockwise_url(manifest->urlbuf, COAP_BLOCKSIZE_64, suit_flashwrite_helper,
             manifest->writer);
 
     if (res) {
