@@ -18,6 +18,9 @@
 #include "thread.h"
 #include "periph/pm.h"
 
+#include "suit/coap.h"
+#include "net/sock/util.h"
+
 #ifdef MODULE_RIOTBOOT_SLOT
 #include "riotboot/slot.h"
 #include "riotboot/flashwrite.h"
@@ -48,37 +51,272 @@ static uint8_t _manifest_buf[SUIT_MANIFEST_BUFSIZE];
 
 static kernel_pid_t _suit_coap_pid;
 
+ssize_t coap_subtree_handler(coap_pkt_t *pkt, uint8_t *buf, size_t len,
+                             void *context)
+{
+    uint8_t uri[NANOCOAP_URI_MAX];
+
+    unsigned method_flag = coap_method2flag(coap_get_code_detail(pkt));
+
+    if (coap_get_uri_path(pkt, uri) > 0) {
+        coap_resource_subtree_t *subtree = context;
+
+        /* TODO: refactor into function, use both here and above */
+        for (unsigned i = 0; i < subtree->resources_numof; i++) {
+            const coap_resource_t *resource = &subtree->resources[i];
+
+            if (!(resource->methods & method_flag)) {
+                continue;
+            }
+
+            int res = coap_match_path(resource, uri);
+            if (res > 0) {
+                continue;
+            }
+            else if (res < 0) {
+                break;
+            }
+            else {
+                return resource->handler(pkt, buf, len, resource->context);
+            }
+        }
+    }
+
+    return coap_reply_simple(pkt, COAP_CODE_INTERNAL_SERVER_ERROR, buf,
+                             len, COAP_FORMAT_TEXT, NULL, 0);
+}
+
+/* verbatim copy from sys/net/application_layer/nanocoap/nanocoap.c */
+static size_t _encode_uint(uint32_t *val)
+{
+    uint8_t *tgt = (uint8_t *)val;
+    size_t size = 0;
+
+    /* count number of used bytes */
+    uint32_t tmp = *val;
+    while(tmp) {
+        size++;
+        tmp >>= 8;
+    }
+
+    /* convert to network byte order */
+    tmp = htonl(*val);
+
+    /* copy bytewise, starting with first actually used byte */
+    *val = 0;
+    uint8_t *tmp_u8 = (uint8_t *)&tmp;
+    tmp_u8 += (4 - size);
+    for (unsigned n = 0; n < size; n++) {
+        *tgt++ = *tmp_u8++;
+    }
+
+    return size;
+}
+
+size_t coap_put_option_block(uint8_t *buf, uint16_t lastonum, unsigned blknum, unsigned szx, int more, uint16_t option)
+{
+    uint32_t blkopt = (blknum << 4) | szx | (more ? 0x8 : 0);
+    size_t olen = _encode_uint(&blkopt);
+
+    return coap_put_option(buf, lastonum, option, (uint8_t *)&blkopt, olen);
+}
+
+static ssize_t _nanocoap_request(sock_udp_t *sock, coap_pkt_t *pkt, size_t len)
+{
+    ssize_t res;
+    size_t pdu_len = (pkt->payload - (uint8_t *)pkt->hdr) + pkt->payload_len;
+    uint8_t *buf = (uint8_t*)pkt->hdr;
+
+    /* TODO: timeout random between between ACK_TIMEOUT and (ACK_TIMEOUT *
+     * ACK_RANDOM_FACTOR) */
+    uint32_t timeout = COAP_ACK_TIMEOUT * US_PER_SEC;
+    unsigned tries_left = COAP_MAX_RETRANSMIT + 1;  /* add 1 for initial transmit */
+    while (tries_left) {
+
+        res = sock_udp_send(sock, buf, pdu_len, NULL);
+        if (res <= 0) {
+            DEBUG("nanocoap: error sending coap request, %d\n", (int)res);
+            break;
+        }
+
+        res = sock_udp_recv(sock, buf, len, timeout, NULL);
+        if (res <= 0) {
+            if (res == -ETIMEDOUT) {
+                DEBUG("nanocoap: timeout\n");
+
+                timeout *= 2;
+                tries_left--;
+                if (!tries_left) {
+                    DEBUG("nanocoap: maximum retries reached\n");
+                }
+                continue;
+            }
+            DEBUG("nanocoap: error receiving coap response, %d\n", (int)res);
+            break;
+        }
+        else {
+            if (coap_parse(pkt, (uint8_t *)buf, res) < 0) {
+                DEBUG("nanocoap: error parsing packet\n");
+                res = -EBADMSG;
+            }
+            break;
+        }
+    }
+
+    return res;
+}
+
+static int _fetch_block(coap_pkt_t *pkt, uint8_t *buf, sock_udp_t *sock, const char *path, coap_blksize_t blksize, size_t num)
+{
+    uint8_t *pktpos = buf;
+    pkt->hdr = (coap_hdr_t *)buf;
+
+    pktpos += coap_build_hdr(pkt->hdr, COAP_TYPE_CON, NULL, 0, COAP_METHOD_GET, num);
+    pktpos += coap_opt_put_uri_path(pktpos, 0, path);
+    pktpos += coap_put_option_block(pktpos, COAP_OPT_URI_PATH, num, blksize, 0, COAP_OPT_BLOCK2);
+
+    pkt->payload = pktpos;
+    pkt->payload_len = 0;
+
+    int res = _nanocoap_request(sock, pkt, 64 + (0x1 << (blksize + 4)));
+    if (res < 0) {
+        return res;
+    }
+
+    res = coap_get_code(pkt);
+    DEBUG("code=%i\n", res);
+    if (res != 205) {
+        return -res;
+    }
+
+    return 0;
+}
+
+int suit_coap_get_blockwise(sock_udp_ep_t *remote, const char *path,
+                               coap_blksize_t blksize,
+                               coap_blockwise_cb_t callback, void *arg)
+{
+    /* mmmmh dynamically sized array */
+    uint8_t buf[64 + (0x1 << (blksize + 4))];
+    sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
+    coap_pkt_t pkt;
+
+    sock_udp_t sock;
+    int res = sock_udp_create(&sock, &local, remote, 0);
+    if (res < 0) {
+        return res;
+    }
+
+
+    int more = 1;
+    size_t num = 0;
+    res = -1;
+    while (more == 1) {
+        DEBUG("fetching block %u\n", (unsigned)num);
+        res = _fetch_block(&pkt, buf, &sock, path, blksize, num);
+        DEBUG("res=%i\n", res);
+
+        if (!res) {
+            coap_block1_t block2;
+            coap_get_block2(&pkt, &block2);
+            more = block2.more;
+            printf("more=%i\n", more);
+
+            if (callback(arg, block2.offset, pkt.payload, pkt.payload_len, more)) {
+                DEBUG("callback res != 0, aborting.\n");
+                res = -1;
+                goto out;
+            }
+        }
+        else {
+            DEBUG("error fetching block\n");
+            res = -1;
+            goto out;
+        }
+
+        num += 1;
+    }
+
+out:
+    sock_udp_close(&sock);
+    return res;
+}
+
+int suit_coap_get_blockwise_url(const char *url,
+                               coap_blksize_t blksize,
+                               coap_blockwise_cb_t callback, void *arg)
+{
+    char hostport[SOCK_HOSTPORT_MAXLEN];
+    char urlpath[SOCK_URLPATH_MAXLEN];
+    sock_udp_ep_t remote;
+
+    if (strncmp(url, "coap://", 7)) {
+        puts("no coap");
+        return -EINVAL;
+    }
+
+    if (sock_urlsplit(url, hostport, urlpath) < 0) {
+        puts("urlsplit");
+        return -EINVAL;
+    }
+
+    if (sock_udp_str2ep(&remote, hostport) < 0) {
+        puts("str2ep");
+        return -EINVAL;
+    }
+
+    if (!remote.port) {
+        remote.port = COAP_PORT;
+    }
+
+    return suit_coap_get_blockwise(&remote, urlpath, blksize, callback, arg);
+}
+
+typedef struct {
+    size_t offset;
+    uint8_t *ptr;
+    size_t len;
+} _buf_t;
+
+static int _2buf(void *arg, size_t offset, uint8_t *buf, size_t len, int more)
+{
+    (void)more;
+
+    _buf_t *_buf = arg;
+    if (_buf->offset != offset) {
+        return 0;
+    }
+    if (len > _buf->len) {
+        return -1;
+    }
+    else {
+        memcpy(_buf->ptr, buf, len);
+        _buf->offset += len;
+        _buf->ptr += len;
+        _buf->len -= len;
+        return 0;
+    }
+}
+
+ssize_t suit_coap_get_blockwise_url_buf(const char *url,
+                               coap_blksize_t blksize,
+                               uint8_t *buf, size_t len)
+{
+    _buf_t _buf = { .ptr=buf, .len=len };
+    int res = suit_coap_get_blockwise_url(url, blksize, _2buf, &_buf);
+    return (res < 0) ? (ssize_t)res : (ssize_t)_buf.offset;
+}
+
 static void _suit_handle_url(const char *url)
 {
     LOG_INFO("suit_coap: downloading \"%s\"\n", url);
-    ssize_t size = nanocoap_get_blockwise_url_buf(url, COAP_BLOCKSIZE_64, _manifest_buf,
+    ssize_t size = suit_coap_get_blockwise_url_buf(url, COAP_BLOCKSIZE_64, _manifest_buf,
                                               SUIT_MANIFEST_BUFSIZE);
     if (size >= 0) {
         LOG_INFO("suit_coap: got manifest with size %u\n", (unsigned)size);
 
         riotboot_flashwrite_t writer;
-#ifdef MODULE_SUIT_V1
-        suit_v1_cbor_manifest_t manifest_v1;
-        ssize_t res;
-
-        if ((res = suit_v1_parse(&manifest_v1, _manifest_buf, size)) != SUIT_OK) {
-            printf("suit_v1_parse() failed. res=%i\n", res);
-            return;
-        }
-
-        if ((res = suit_v1_cbor_get_url(&manifest_v1, _url, SUIT_URL_MAX -1)) <= 0) {
-            printf("suit_v1_cbor_get_url() failed res=%i\n", res);
-            return;
-        }
-
-        assert (res < SUIT_URL_MAX);
-        _url[res] = '\0';
-
-        LOG_INFO("suit_coap: got image URL(len=%u): \"%s\"\n", (unsigned)res, _url);
-        riotboot_flashwrite_init(&writer, riotboot_slot_other());
-        res = nanocoap_get_blockwise_url(_url, COAP_BLOCKSIZE_64, suit_flashwrite_helper,
-                                         &writer);
-#else
+#ifdef MODULE_SUIT_V4
         suit_v4_manifest_t manifest;
         memset(&writer, 0, sizeof(manifest));
 
