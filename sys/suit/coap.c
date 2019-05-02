@@ -23,11 +23,6 @@
 #include "riotboot/flashwrite.h"
 #endif
 
-#ifdef MODULE_SUIT_V1
-#include "suit/v1/suit.h"
-#include "suit/v1/cbor.h"
-#endif
-
 #ifdef MODULE_SUIT_V4
 #include "suit/v4/suit.h"
 #endif
