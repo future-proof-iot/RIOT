@@ -43,9 +43,6 @@ USEMODULE += shell_commands
 USEMODULE += nanocoap_sock sock_util
 USEMODULE += suit suit_coap
 
-# v1:
-#USEMODULE += suit_v1
-
 # v4:
 USEMODULE += suit_v4
 INCLUDES += -I$(CURDIR) # Include public_key.h in the path
