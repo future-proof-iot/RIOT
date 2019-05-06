@@ -65,5 +65,7 @@ results/
 # mypy artifacts
 .mypy_cache/
 
-# suit manidest secret key
+# suit manifest keys
 secret.key
+public.key
+public_key.h
