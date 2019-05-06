@@ -62,5 +62,7 @@ scan-build/
 # compile_and_test_for_boards default "results" directory
 results/
 
-# suit manidest secret key
+# suit manifest keys
 secret.key
+public.key
+public_key.h
