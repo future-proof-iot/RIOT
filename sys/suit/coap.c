@@ -201,6 +201,10 @@ int suit_coap_get_blockwise(sock_udp_ep_t *remote, const char *path,
     sock_udp_ep_t local = SOCK_IPV6_EP_ANY;
     coap_pkt_t pkt;
 
+    /* HACK: use random local port */
+    local.port = 0x8000 + (xtimer_now_usec() % 0XFFF);
+
+
     sock_udp_t sock;
     int res = sock_udp_create(&sock, &local, remote, 0);
     if (res < 0) {
@@ -220,7 +224,6 @@ int suit_coap_get_blockwise(sock_udp_ep_t *remote, const char *path,
             coap_block1_t block2;
             coap_get_block2(&pkt, &block2);
             more = block2.more;
-            printf("more=%i\n", more);
 
             if (callback(arg, block2.offset, pkt.payload, pkt.payload_len, more)) {
                 DEBUG("callback res != 0, aborting.\n");
