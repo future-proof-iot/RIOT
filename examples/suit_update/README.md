@@ -28,13 +28,36 @@ server is used.
 
 # Setup
 
-### Initial flash
+## Key Generation
+
+To sign the manifest and for de the device to verify the manifest a key must be generated.
+
+In examples/suit_update:
+
+    $ BOARD=samr21-xpro make suit/genkey
+
+You will get this message in the terminal:
+
+    the public key is b'a0fc7fe714d0c81edccc50c9e3d9e6f9c72cc68c28990f235ede38e4553b4724'
+
+We also need to generate a header file for the public key to be included in the firmware
+that will be porgramed in the device.
+
+In examples/suit_update:
+
+    $ BOARD=samr21-xpro make suit/keyhdr
+
+You will get this message in the terminal:
+
+    xxd -i public.key > public_key.h
+
+## Initial flash
 
 In order to get a SUIT capable firmware onto the node. In examples/suit_update:
 
     $ BOARD=samr21-xpro make clean riotboot/flash -j4
 
-### Setup network
+## Setup network
 
 First, you need to compile `ethos`.
 Go to `/dist/tools/ethos` and type:
@@ -82,26 +105,15 @@ Start aiocoap-fileserver:
 If aiocoap was cloned and built from source aiocoap-filserver will be located
 at <AIOCOAP_BASE_DIR>/aiocoap/contrib.
 
-### Key Generation
+# Update device
 
-To sign the manifest a key must be generated.
-
-In examples/suit_update:
-
-    $ BOARD=samr21-xpro make suit/genkey
-
-You will get this message in the terminal:
-
-    the public key is b'a0fc7fe714d0c81edccc50c9e3d9e6f9c72cc68c28990f235ede38e4553b4724'
-
-### Publish
+## Publish
 
 Currently, the build system assumes that it can publish files by simply copying
 them to a configurable folder. For this example, aiocoap-fileserver will then
 serve the files via CoAP.
 
-Manifests and image files will be copied to
-$(SUIT_COAP_FSROOT)/$(SUIT_COAP_BASEPATH).
+Manifests and image files will be copied to $(SUIT_COAP_FSROOT)/$(SUIT_COAP_BASEPATH).
 
 In examples/suit_update:
 
@@ -112,12 +124,14 @@ see 6 pairs of messages indicating where (filepath) the file was published and
 the coap resource URI
 
     ...
-    published "/home/francisco/workspace/RIOT/examples/suit_update/bin/samr21-xpro/suit_update-slot0.riot.suit.1553182001.bin"
-        as "coap://[fd01::1]/fw/samr21-xpro/suit_update-slot0.riot.suit.1553182001.bin"
+    published "/home/francisco/workspace/RIOT/examples/suit_update/bin/samr21-xpro/suit_update-riot.suitv4_signed.1557135946.bin"
+           as "coap://[fd01::1]/fw/samr21-xpro/suit_update-riot.suitv4_signed.1557135946.bin"
+    published "/home/francisco/workspace/RIOT/examples/suit_update/bin/samr21-xpro/suit_update-riot.suitv4_signed.latest.bin"
+           as "coap://[fd01::1]/fw/samr21-xpro/suit_update-riot.suitv4_signed.latest.bin"
     ...
 
 
-### Notify node
+## Notify node
 
 If the network has been started as described above, the RIOT node should be
 reachable via link-local "fe80::2" on the ethos interface.
@@ -160,7 +174,7 @@ It will take some time to fetch and write to flash, you will a series of message
     ...
 
 Once the new image is written, final validation will be done and then
-thedevice will reboot and display:
+the device will reboot and display:
 
     2019-04-05 16:19:26,363 - INFO # riotboot: verifying digest at 0x20003f37 (img at: 0x20800 size: 80212)
     2019-04-05 16:19:26,704 - INFO # handler res=0
@@ -184,7 +198,7 @@ thedevice will reboot and display:
     running from slot 1
     Waiting for address autoconfiguration...
 
-The slot number should have changed form when you started the application.
+The slot number should have changed from when you started the application.
 You can do the publish-notify sequence again to verify this.
 
 # In depth explanation
@@ -199,7 +213,6 @@ in a RIOT application:
 * riotboot_slot
 * suit
     * suit_coap
-    * suit_v1
     * suit_v4
 
 ### riotboot
@@ -246,7 +259,6 @@ riotboot is not supported by all boards. Current supported boards are:
 * iotlab-m3
 * nrfxxx
 
-
 ### suit
 
 The suit module encloses all the other suit_related module. Formally this only
@@ -269,33 +281,12 @@ When a new manifest url is received on the trigger resource a message is resent
 to the coap thread with the manifest's url. The thread will then fetch the
 manifest by a block coap request to the specified url.
 
-#### suit_v1
-
-To build using suit-v1 comment out the v4 secction in the Makefile and uncomment
-the v1 part so it looks like:
-
-    # v1:
-    USEMODULE += suit_v1
-
-    # v4:
-    # USEMODULE += suit_v4
-    # INCLUDES += -I$(CURDIR) # Include public_key.h in the path
-
-This includes v1 manifest support. When a url is received in the /suit/trigger
-coap resource it will trigger a coap blockwise fetch of the manifest. When this
-manifest is received it will be parsed. If the received manifest is valid it
-will extract the url for the firmware location from the manifest.
-
-It will then fetch the firmware, write it to the inactive slot and reboot the device.
-From there the bootloader takes over, verifying the slot riotboot_hdr and boots
-from the newest image.
-
 #### support for v4
 
 This includes v4 manifest support. When a url is received in the /suit/trigger
 coap resource it will trigger a coap blockwise fetch of the manifest. When this
-manifest is received it will be parsed. The signcature of the manifest will be
-verified and then the rest of the manifest contetn. If the received manifest is valid it
+manifest is received it will be parsed. The signature of the manifest will be
+verified and then the rest of the manifest content. If the received manifest is valid it
 will extract the url for the firmware location from the manifest.
 
 It will then fetch the firmware, write it to the inactive slot and reboot the device.
@@ -334,7 +325,7 @@ NOTE: if we weren't using a local server you would need to have ipv6 support
 on your network or use tunneling.
 
 NOTE: using fd00:dead:beef::1 as an address for the coap server would also
-work and you would;t need to add a routable address to the tap interface since
+work and you wouldn't need to add a routable address to the tap interface since
 a route to the loopback interface (lo) is already configured.
 
 ## Sever and File System Variables
@@ -345,11 +336,14 @@ The following variables are defined in makefiles/suit.inc.mk:
     SUIT_COAP_SERVER ?= localhost
     SUIT_COAP_ROOT ?= coap://$(SUIT_COAP_SERVER)/$(SUIT_COAP_BASEPATH)
     SUIT_COAP_FSROOT ?= $(RIOTBASE)/coaproot
+    SUIT_PUB_HDR ?= public_key.h
 
 The following convention is used when naming a manifest
 
-    SLOTx_SUIT_MANIFEST ?= $(BINDIR_APP)-slotx.riot.suit.$(APP_VER).bin
-    SLOTx_SUIT_MANIFEST_LATEST ?= $(BINDIR_APP)-slotx.riot.suit.latest.bin
+    SUIT_MANIFEST ?= $(BINDIR_APP)-riot.suitv4.$(APP_VER).bin
+    SUIT_MANIFEST_LATEST ?= $(BINDIR_APP)-riot.suitv4.latest.bin
+    SUIT_MANIFEST_SIGNED ?= $(BINDIR_APP)-riot.suitv4_signed.$(APP_VER).bin
+    SUIT_MANIFEST_SIGNED_LATEST ?= $(BINDIR_APP)-riot.suitv4_signed.latest.bin
 
 The following default values are using for generating the manifest:
 
@@ -357,6 +351,8 @@ The following default values are using for generating the manifest:
     SUIT_VERSION ?= $(APP_VER)
     SUIT_DEVICE_ID ?= $(BOARD)
     SUIT_KEY ?= secret.key
+    SUIT_PUB ?= public.key
+    SUIT_PUB_HDR ?= public_key.h
 
 All files (both slot binaries, both manifests, copies of manifests with
 "latest" instead of $APP_VER in riotboot build) are copied into the folder
@@ -370,8 +366,8 @@ under $(SUIT_COAP_ROOT). This can be done by e.g., "aiocoap-fileserver $(SUIT_CO
 
 The following recipes are defined in makefiles/suit.inc.mk
 
-suit/manifest: creates manifest for all slots and "latest" tag of each,
-    uses following parameters:
+suit/manifest: creates a non signed and signed manifest, and also a latest tag for these.
+    It uses following parameters:
 
     - $(SUIT_KEY): key to sign the manifest
     - $(SUIT_PUB): public key used to verify the manifest
@@ -397,12 +393,13 @@ suit/notify: triggers a device update, it sends two requests:
 
     - $(SUIT_CLIENT): define the client ipv6 address
     - $(SUIT_COAP_ROOT): root url for the coap resources
-    - $(SUIT_MANIFEST_LATEST: name of the resource where the latest non signed
-    manifest is exposed.
-    - $(SUIT_MANIFEST_SIGNED_LATES): name of the resource where the latest signed
+    - $(SUIT_MANIFEST_SIGNED_LATEST): name of the resource where the latest signed
     manifest is exposed.
 
 suit/genkey: this recipe generates a ed25519 key to sign the manifest
+
+suit/keyhdr: this recipe generates the public_key.h file that will store the
+    public key in the compiled firmware.
 
 **NOTE: to plugin a new server you would only have to change the suit/publish
 recipe, respecting or adjusting to the naming conventions.**
