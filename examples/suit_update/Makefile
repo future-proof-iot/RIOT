@@ -59,6 +59,10 @@ endif
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
+# Change this to 0 to not use ethos
+USE_ETHOS ?= 1
+
+ifeq (1,$(USE_ETHOS))
 ifeq (,$(filter native,$(BOARD)))
   GNRC_NETIF_NUMOF := 2
   USEMODULE += ethos
@@ -68,6 +72,7 @@ ifeq (,$(filter native,$(BOARD)))
   # ethos baudrate can be configured from make command
   ETHOS_BAUDRATE ?= 115200
   CFLAGS += -DETHOS_BAUDRATE=$(ETHOS_BAUDRATE) -DUSE_ETHOS_FOR_STDIO
+endif
 endif
 
 # riotboot is currently incompatible with the softdevice.
