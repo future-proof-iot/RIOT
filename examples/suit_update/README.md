@@ -39,7 +39,7 @@ You will get this message in the terminal:
     the public key is b'a0fc7fe714d0c81edccc50c9e3d9e6f9c72cc68c28990f235ede38e4553b4724'
 
 We also need to generate a header file for the public key to be included in the firmware
-that will be porgramed in the device.
+that will be programed in the device.
 
 In examples/suit_update:
 
@@ -49,13 +49,16 @@ You will get this message in the terminal:
 
     xxd -i public.key > public_key.h
 
-## Provision IoT device (initial flash)
+
+## Standalone node Using Ethos
+
+### Provision IoT device (initial flash)
 
 In order to get a SUIT capable firmware onto the node. In examples/suit_update:
 
     $ BOARD=samr21-xpro make clean riotboot/flash -j4
 
-## Setup network
+### Setup network
 
 First, you need to compile `ethos`.
 Go to `/dist/tools/ethos` and type:
@@ -70,9 +73,9 @@ This tool is found in `/dist/tools/uhcpd`. So, as for `ethos`:
 In one shell and with the board already flashed and connected to /dev/ttyACM0:
 
     $ cd $RIOTBASE/dist/tools/ethos
-    $ sudo ./start_network.sh /dev/ttyACM0 riot0 fd00::1/64
+    $ sudo ./start_network.sh /dev/ttyACM0 tap0 2001:db8::1/64
 
-Once everyhting is configured you will get:
+Once everything is configured you will get:
 
     ...
 
@@ -93,14 +96,72 @@ Keep this running (don't close the shell).
 
 Add a routable address to host:
 
-    $ sudo ip address add fd01::1/128 dev riot0
+    $ sudo ip address add 2001:db8::1/128 dev tap0
 
-Start aiocoap-fileserver:
+If the network has been started as described above, the RIOT node will be
+reachable via link-local "fe80::2" on the ethos interface and not by its wireless
+interface global address.
+
+## Wireless Node with Border Router
+
+### Setup network
+
+A wireless node has no direct connection to the Internet we need to setup a border
+router, to this use any node with a 802.15.4 radio and follow the instructions to
+setup [gnrc_border_router](https://github.com/RIOT-OS/RIOT/tree/master/examples/gnrc_border_router).
+Pay attention to the prefix you will use, if you follow the border router instructions
+it would be '2001:db8::/64' when running:
+
+    $ sudo sh start_network.sh /dev/ttyACMx tap0 2001:db8::1/64
+
+Add a routable address to host:
+
+    $ sudo ip address add 2001:db8::1/128 dev tap0
+
+### Initial flash
+
+In this scenario the node will be connected through a border router so we flash the
+firmware without ethos. In examples/suit_update:
+
+    $ USE_ETHOS=0 BOARD=samr21-xpro make clean riotboot/flash -j4
+
+We then open a serial terminal with the device to recover its global address.
+In examples/suit_update:
+
+    $ USE_ETHOS=0 BOARD=samr21-xpro make term
+
+If the Border Router is already set up when opening the terminal you should get
+
+    ...
+
+    Iface  6  HWaddr: 0D:96  Channel: 26  Page: 0  NID: 0x23
+            Long HWaddr: 79:7E:32:55:13:13:8D:96
+             TX-Power: 0dBm  State: IDLE  max. Retrans.: 3  CSMA Retries: 4
+            AUTOACK  ACK_REQ  CSMA  L2-PDU:102 MTU:1280  HL:64  RTR
+            RTR_ADV  6LO  IPHC
+            Source address length: 8
+            Link type: wireless
+            inet6 addr: fe80::7b7e:3255:1313:8d96  scope: local  VAL
+            inet6 addr: 2001:db8::7b7e:3255:1313:8d96  scope: global  VAL
+            inet6 group: ff02::2
+            inet6 group: ff02::1
+            inet6 group: ff02::1:ff17:dd59
+            inet6 group: ff02::1:ff00:2
+
+    suit_coap: started.
+
+The global address would be: "2001:db8::7b7e:3255:1313:8d96". The address you see
+will be different according to your device and the chosen prefix. In this case
+the RIOT node will be reachable via its global address.
+
+## Setup fw-server
+
+In this examples we are using aiocoap-fileserver. to start aiocoap-fileserver:
 
     $ mkdir ${RIOTBASE}/coaproot
     $ <PATH>/aiocoap-fileserver ${RIOTBASE}/coaproot
 
-If aiocoap was cloned and built from source aiocoap-filserver will be located
+If aiocoap was cloned and built from source aiocoap-fileserver will be located
 at <AIOCOAP_BASE_DIR>/aiocoap/contrib.
 
 # Update IoT device
@@ -115,7 +176,7 @@ Manifests and image files will be copied to $(SUIT_COAP_FSROOT)/$(SUIT_COAP_BASE
 
 In examples/suit_update:
 
-    $ BOARD=samr21-xpro SUIT_COAP_SERVER=[fd01::1] make suit/publish
+    $ BOARD=samr21-xpro SUIT_COAP_SERVER=[2001:db8::1] make suit/publish
 
 This will publish into the server new firmware for a samr21-xpro board. You should
 see 6 pairs of messages indicating where (filepath) the file was published and
@@ -123,18 +184,25 @@ the coap resource URI
 
     ...
     published "/home/francisco/workspace/RIOT/examples/suit_update/bin/samr21-xpro/suit_update-riot.suitv4_signed.1557135946.bin"
-           as "coap://[fd01::1]/fw/samr21-xpro/suit_update-riot.suitv4_signed.1557135946.bin"
+           as "coap://[2001:db8::1]/fw/samr21-xpro/suit_update-riot.suitv4_signed.1557135946.bin"
     published "/home/francisco/workspace/RIOT/examples/suit_update/bin/samr21-xpro/suit_update-riot.suitv4_signed.latest.bin"
-           as "coap://[fd01::1]/fw/samr21-xpro/suit_update-riot.suitv4_signed.latest.bin"
+           as "coap://[2001:db8::1]/fw/samr21-xpro/suit_update-riot.suitv4_signed.latest.bin"
     ...
 
 
 ## Notify IoT device
 
-If the network has been started as described above, the RIOT node should be
-reachable via link-local "fe80::2" on the ethos interface.
+If the network has been started with a standalone node, the RIOT node should be
+reachable via link-local "fe80::2%tap0" on the ethos interface. If it was setup as a
+wireless device it will be reachable via its global address, something like "2001:db8::7b7e:3255:1313:8d96"
 
-    $ SUIT_COAP_SERVER='[fd01::1]' SUIT_CLIENT=[fe80::2%riot0] BOARD=samr21-xpro make suit/notify
+Standalone:
+
+    $ SUIT_COAP_SERVER=[2001:db8::1] SUIT_CLIENT=[fe80::2%tap0] BOARD=samr21-xpro make suit/notify
+
+Wireless:
+
+    $ SUIT_COAP_SERVER=[2001:db8::1] SUIT_CLIENT=[2001:db8::7b7e:3255:1313:8d96] BOARD=samr21-xpro make suit/notify
 
 This will notify the node of new available manifest and it will fetch it.
 
@@ -299,25 +367,29 @@ ethernet over serial driver).
 
 When executing $RIOTBASE/dist/tools/ethos:
 
-    $ sudo ./start_network.sh /dev/ttyACM0 riot0 fd00::1/64
+    $ sudo ./start_network.sh /dev/ttyACM0 tap0 2001:db8::1/64
 
-A tap interface named "riot0" is setup. fe80::1/64 is set up as it's
+A tap interface named "tap0" is setup. fe80::1/64 is set up as it's
 link local address and fd00:dead:beef::1/128 as the "lo" unique link local address.
 
-Also fd00::1/64 is configured- as a prefix for the network. It also sets-up
-a route to the fd00::1/64 subnet threw fe80::2. Where fe80::2 is the default
+Also 2001:db8::1/64 is configured- as a prefix for the network. It also sets-up
+a route to the 2001:db8::1/64 subnet through fe80::2. Where fe80::2 is the default
 link local address of the UHCP interface.
 
 Finally when:
 
-    $ sudo ip address add fd01::1/128 dev riot0
+    $ sudo ip address add 2001:db8::1/128 dev tap0
 
-We are adding a routable address to the riot0 tap interface. The device can
-now send messages to the the coap server threw the riot0 tap interface. You could
+We are adding a routable address to the tap0 tap interface. The device can
+now send messages to the the coap server through the tap0 tap interface. You could
 use a different address for the coap server as long as you also add a routable
 address, so:
 
-    $ sudo ip address add $(SUIT_COAP_SERVER) dev riot0
+    $ sudo ip address add $(SUIT_COAP_SERVER) dev tap0
+
+When using a border router the same thing is happening although the node is no
+longer reachable through its link local address but routed through to border router
+so we can reach it with its global address.
 
 NOTE: if we weren't using a local server you would need to have ipv6 support
 on your network or use tunneling.
