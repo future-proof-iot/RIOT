@@ -14,6 +14,9 @@ BOARD_INSUFFICIENT_MEMORY := arduino-duemilanove arduino-mega2560 arduino-nano \
                              stm32f0discovery telosb waspmote-pro wsn430-v1_3b \
                              wsn430-v1_4 z1
 
+# lower pktbuf size a little
+CFLAGS += -DGNRC_PKTBUF_SIZE=2000
+
 #
 # Networking
 #
