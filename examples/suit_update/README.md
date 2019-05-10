@@ -1,16 +1,14 @@
 # Overview
 
-This example application shows how to integrate SUIT software updates into a
-RIOT application. This application will only be implementing basic v1 support of
-the [draft-moran-suit-manifest-01](https://datatracker.ietf.org/doc/draft-moran-suit-manifest/01/)
-and the [draft-moran-suit-manifest-04](https://datatracker.ietf.org/doc/draft-moran-suit-manifest/04/).
-By Default we will use suit-v04.
+This example shows how to integrate SUIT-compliant firmware updates into a
+RIOT application. It implements basic support of the SUIT architecture using the manifest format specified in [draft-moran-suit-manifest-04](https://datatracker.ietf.org/doc/draft-moran-suit-manifest/04/).
 
 ## Prerequisites
 
 Dependencies:
     
-    Python3 : - ed25519 > 1.4
+    Python3 : - python > 3.6
+              - ed25519 > 1.4
               - pyasn1  > 0.4.5
               - cbor    > 1.0.0 
               - aiocoap > 0.4
@@ -51,7 +49,7 @@ You will get this message in the terminal:
 
     xxd -i public.key > public_key.h
 
-## Initial flash
+## Provision IoT device (initial flash)
 
 In order to get a SUIT capable firmware onto the node. In examples/suit_update:
 
@@ -105,9 +103,9 @@ Start aiocoap-fileserver:
 If aiocoap was cloned and built from source aiocoap-filserver will be located
 at <AIOCOAP_BASE_DIR>/aiocoap/contrib.
 
-# Update device
+# Update IoT device
 
-## Publish
+## Build and publish firmware update
 
 Currently, the build system assumes that it can publish files by simply copying
 them to a configurable folder. For this example, aiocoap-fileserver will then
@@ -131,7 +129,7 @@ the coap resource URI
     ...
 
 
-## Notify node
+## Notify IoT device
 
 If the network has been started as described above, the RIOT node should be
 reachable via link-local "fe80::2" on the ethos interface.
