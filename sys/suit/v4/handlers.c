@@ -389,7 +389,7 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
             return SUIT_ERR_INVALID_MANIFEST;
         }
 
-        cbor_map_iterate_init(&map, &arr);
+        cbor_map_iterate_init(&arr, &map);
 
         suit_v4_component_t *current = &manifest->components[n];
 
