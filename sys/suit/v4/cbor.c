@@ -41,12 +41,12 @@ static suit_manifest_handler_t _manifest_get_auth_wrapper_handler(int key);
 
 int cbor_map_iterate_init(CborValue *map, CborValue *it)
 {
-    if (!cbor_value_is_map(it)) {
+    if (!cbor_value_is_map(map)) {
         LOG_INFO("suit_v4_parse(): manifest not an map\n)");
         return SUIT_ERR_INVALID_MANIFEST;
     }
 
-    cbor_value_enter_container(it, map);
+    cbor_value_enter_container(map, it);
 
     return SUIT_OK;
 }
@@ -161,7 +161,7 @@ static int _v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf,
 
     LOG_INFO("jumping into map\n)");
 
-    while (cbor_map_iterate(&map, &key, &value)) {
+    while (cbor_map_iterate(&it, &key, &value)) {
         int integer_key;
         if (suit_cbor_get_int(&key, &integer_key) != SUIT_OK){
             return SUIT_ERR_INVALID_MANIFEST;
@@ -182,7 +182,7 @@ static int _v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf,
         }
     }
 
-    cbor_value_leave_container(&it, &map);
+    cbor_value_leave_container(&map, &it);
 
     return SUIT_OK;
 }
