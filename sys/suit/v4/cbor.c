@@ -182,7 +182,7 @@ static int _v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf,
         }
     }
 
-    cbor_value_leave_container(&map, &it);
+    cbor_value_leave_container(&it, &map);
 
     return SUIT_OK;
 }
