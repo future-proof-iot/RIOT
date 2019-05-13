@@ -423,7 +423,7 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
     }
 
     manifest->state |= SUIT_MANIFEST_HAVE_COMPONENTS;
-    cbor_value_enter_container(&arr, it);
+    cbor_value_enter_container(it, &arr);
 
     LOG_INFO("storing components done\n)");
     return 0;
