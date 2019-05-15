@@ -7,6 +7,7 @@
  * directory for more details.
  */
 /**
+ * @defgroup    sys_suit_v4 SUIT draft v4
  * @ingroup     sys_suit
  * @brief       SUIT manifest handling
  *
