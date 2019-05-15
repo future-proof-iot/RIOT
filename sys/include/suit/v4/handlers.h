@@ -53,8 +53,6 @@ int suit_cbor_get_string(const CborValue *it, const uint8_t **buf, size_t *len);
  */
 suit_manifest_handler_t suit_manifest_get_handler(int key);
 
-typedef suit_manifest_handler_t (*suit_manifest_handler_getter_t)(int key);
-
 #ifdef __cplusplus
 }
 #endif
