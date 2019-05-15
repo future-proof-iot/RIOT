@@ -1,11 +1,59 @@
+/*
+ * Copyright (C) 2019 Kaspar Schleiser <kaspar@schleiser.de>
+ *               2019 Inria
+ *               2019 Freie Universität Berlin
+ *
+ * This file is subject to the terms and conditions of the GNU Lesser
+ * General Public License v2.1. See the file LICENSE in the top level
+ * directory for more details.
+ */
+/**
+ * @defgroup    sys_suit SUIT secure firmware updates
+ * @ingroup     sys
+ * @brief       SUIT secure firmware updates
+ *
+ * @{
+ *
+ * @brief       SUIT CoAP helper API
+ * @author      Kaspar Schleiser <kaspar@schleiser.de>
+ *
+ */
+
 #ifndef SUIT_COAP_H
 #define SUIT_COAP_H
 
 #include "net/nanocoap.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief    Start SUIT CoAP thread
+ */
 void suit_coap_run(void);
 
-/* subtree support start */
+/**
+ * @brief SUIT CoAP endpoint entry.
+ *
+ * In order to use, include this header, then add SUIT_COAP_SUBTREE to the nanocoap endpoint array.
+ * Mind the alphanumerical sorting!
+ *
+ * See examples/suit_update for an example.
+ */
+#define SUIT_COAP_SUBTREE \
+    { \
+        .path="/suit/", \
+        .methods=COAP_MATCH_SUBTREE | COAP_METHOD_GET | COAP_METHOD_POST | COAP_METHOD_PUT, \
+        .handler=coap_subtree_handler, \
+        .context=(void*)&coap_resource_subtree_suit \
+    }
+
+
+/* this is internal code that will go soon, thus skip Doxygen checks */
+#ifndef DOXYGEN
+
+/* subtree support */
 ssize_t coap_subtree_handler(coap_pkt_t *pkt, uint8_t *buf, size_t len,
                              void *context);
 
@@ -19,18 +67,9 @@ typedef const struct {
 
 typedef int (*coap_blockwise_cb_t)(void *arg, size_t offset, uint8_t *buf, size_t len, int more);
 
-#define SUIT_COAP_SUBTREE \
-    { \
-        .path="/suit/", \
-        .methods=COAP_MATCH_SUBTREE | COAP_METHOD_GET | COAP_METHOD_POST | COAP_METHOD_PUT, \
-        .handler=coap_subtree_handler, \
-        .context=(void*)&coap_resource_subtree_suit \
-    }
-
 extern const coap_resource_subtree_t coap_resource_subtree_suit;
-/* subtree support end */
 
-/* nanocoap blockwise client start */
+/* nanocoap blockwise client */
 typedef enum {
     COAP_BLOCKSIZE_32 = 1,
     COAP_BLOCKSIZE_64,
@@ -47,6 +86,11 @@ int suit_coap_get_blockwise_url(const char *url,
                                coap_blksize_t blksize,
                                coap_blockwise_cb_t callback, void *arg);
 
-/* nanocoap blockwise client end */
+#endif /* DOXYGEN */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SUIT_COAP_H */
+/** @} */
