@@ -38,6 +38,7 @@
 
 
 static suit_manifest_handler_t _manifest_get_auth_wrapper_handler(int key);
+typedef suit_manifest_handler_t (*suit_manifest_handler_getter_t)(int key);
 
 int cbor_map_iterate_init(CborValue *map, CborValue *it)
 {
