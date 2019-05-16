@@ -8,6 +8,7 @@ PSEUDOMODULES += conn_can_isotp_multi
 PSEUDOMODULES += cord_ep_standalone
 PSEUDOMODULES += core_%
 PSEUDOMODULES += cortexm_fpu
+PSEUDOMODULES += cpu_check_address
 PSEUDOMODULES += ecc_%
 PSEUDOMODULES += emb6_router
 PSEUDOMODULES += event_%
@@ -69,6 +70,7 @@ PSEUDOMODULES += sock
 PSEUDOMODULES += sock_ip
 PSEUDOMODULES += sock_tcp
 PSEUDOMODULES += sock_udp
+PSEUDOMODULES += stdio_uart_rx
 PSEUDOMODULES += suit_%
 
 # handle suit_v4 being a distinct module
