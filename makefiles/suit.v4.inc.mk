@@ -63,6 +63,9 @@ suit/notify: | $(filter suit/publish, $(MAKECMDGOALS))
 		--payload "$(SUIT_COAP_ROOT)/$$(basename $(SUIT_MANIFEST_SIGNED_LATEST))" && \
 		echo "Triggered $(SUIT_CLIENT) to update."
 
+suit/delkeys:
+	rm -f *key*
+
 suit/genkey:
 	$(RIOTBASE)/dist/tools/suit_v4/gen_key.py
 
