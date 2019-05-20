@@ -62,6 +62,7 @@ QUIET ?= 1
 ifeq (,$(filter native,$(BOARD)))
   GNRC_NETIF_NUMOF := 2
   USEMODULE += ethos
+  USEMODULE += stdio_uart_rx
   USEMODULE += gnrc_uhcpc
 
   # ethos baudrate can be configured from make command
