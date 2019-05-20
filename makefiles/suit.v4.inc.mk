@@ -3,12 +3,13 @@ SUIT_COAP_BASEPATH ?= fw/$(BOARD)
 SUIT_COAP_SERVER ?= localhost
 SUIT_COAP_ROOT ?= coap://$(SUIT_COAP_SERVER)/$(SUIT_COAP_BASEPATH)
 SUIT_COAP_FSROOT ?= $(RIOTBASE)/coaproot
+SUIT_EXTENSION ?= latest
 
 #
 SUIT_MANIFEST ?= $(BINDIR_APP)-riot.suitv4.$(APP_VER).bin
-SUIT_MANIFEST_LATEST ?= $(BINDIR_APP)-riot.suitv4.latest.bin
+SUIT_MANIFEST_LATEST ?= $(BINDIR_APP)-riot.suitv4.$(SUIT_EXTENSION).bin
 SUIT_MANIFEST_SIGNED ?= $(BINDIR_APP)-riot.suitv4_signed.$(APP_VER).bin
-SUIT_MANIFEST_SIGNED_LATEST ?= $(BINDIR_APP)-riot.suitv4_signed.latest.bin
+SUIT_MANIFEST_SIGNED_LATEST ?= $(BINDIR_APP)-riot.suitv4_signed.$(SUIT_EXTENSION).bin
 
 SUIT_VENDOR ?= "riot-os.org"
 SUIT_SEQNR ?= $(APP_VER)
