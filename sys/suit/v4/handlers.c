@@ -48,11 +48,10 @@ static int _hello_handler(suit_v4_manifest_t *manifest, int key, CborValue *it)
 
     if (cbor_value_is_text_string(it)) {
         cbor_value_copy_text_string(it, buf, &len, NULL);
-        LOG_INFO("HELLO: \"%.*s\"\n", len, buf);
         return SUIT_OK;
     }
     else {
-        LOG_INFO("_hello_handler(): unexpected value type: %u\n", cbor_value_get_type(
+        LOG_DEBUG("_hello_handler(): unexpected value type: %u\n", cbor_value_get_type(
                    it));
         return -1;
     }
@@ -125,12 +124,12 @@ static int _dtv_set_comp_idx(suit_v4_manifest_t *manifest, int key, CborValue *i
 {
     (void)key;
     if (cbor_value_is_boolean(it)) {
-        LOG_INFO("_dtv_set_comp_idx() ignoring boolean\n)");
+        LOG_DEBUG("_dtv_set_comp_idx() ignoring boolean\n)");
         return 0;
     }
     int res = suit_cbor_get_int(it, &manifest->component_current);
     if (!res) {
-        LOG_INFO("Setting component index to %d\n", manifest->component_current);
+        LOG_DEBUG("Setting component index to %d\n", manifest->component_current);
     }
     return res;
 }
@@ -138,20 +137,20 @@ static int _dtv_set_comp_idx(suit_v4_manifest_t *manifest, int key, CborValue *i
 static int _dtv_run_seq_cond(suit_v4_manifest_t *manifest, int key, CborValue *it)
 {
     (void)key;
-    LOG_INFO("Starting conditional sequence handler\n");
+    LOG_DEBUG("Starting conditional sequence handler\n");
     _handle_command_sequence(manifest, it, _common_sequence_handler);
     return 0;
 }
 
 static int _param_get_uri_list(suit_v4_manifest_t *manifest, CborValue *it)
 {
-    LOG_INFO("got url list\n");
+    LOG_DEBUG("got url list\n");
     manifest->components[manifest->component_current].url = *it;
     return 0;
 }
 static int _param_get_digest(suit_v4_manifest_t *manifest, CborValue *it)
 {
-    LOG_INFO("got digest\n");
+    LOG_DEBUG("got digest\n");
     manifest->components[manifest->component_current].digest = *it;
     return 0;
 }
@@ -160,10 +159,9 @@ static int _param_get_img_size(suit_v4_manifest_t *manifest, CborValue *it)
 {
     int res = suit_cbor_get_uint32(it, &manifest->components[0].size);
     if (res) {
-        LOG_INFO("error getting image size\n");
+        LOG_DEBUG("error getting image size\n");
         return res;
     }
-    LOG_INFO("got img size\n");
     return res;
 }
 
@@ -180,8 +178,8 @@ static int _dtv_set_param(suit_v4_manifest_t *manifest, int key, CborValue *it)
         int param_key;
         suit_cbor_get_int(&map, &param_key);
         cbor_value_advance(&map);
-        LOG_INFO("Setting component index to %d\n", manifest->component_current);
-        LOG_INFO("param_key=%i\n", param_key);
+        LOG_DEBUG("Setting component index to %d\n", manifest->component_current);
+        LOG_DEBUG("param_key=%i\n", param_key);
         int res;
         switch (param_key) {
             case 6: /* SUIT URI LIST */
@@ -209,7 +207,7 @@ static int _dtv_set_param(suit_v4_manifest_t *manifest, int key, CborValue *it)
 static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
 {
     (void)key; (void)_it; (void)manifest;
-    LOG_INFO("_dtv_fetch() key=%i\n", key);
+    LOG_DEBUG("_dtv_fetch() key=%i\n", key);
 
     const uint8_t *url;
     size_t url_len;
@@ -226,21 +224,21 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
         /* open sequence qith cbor parser */
         int err = suit_cbor_subparse(&parser, &manifest->components[0].url, &it);
         if (err < 0) {
-            LOG_INFO("subparse failed\n)");
+            LOG_DEBUG("subparse failed\n)");
             return err;
         }
 
         /* confirm the document contains an array */
         if (!cbor_value_is_array(&it)) {
-            LOG_INFO("url list no array\n)");
-            LOG_INFO("type: %u\n", cbor_value_get_type(&it));
+            LOG_DEBUG("url list no array\n)");
+            LOG_DEBUG("type: %u\n", cbor_value_get_type(&it));
         }
 
         /* enter container, confirm it is an array, too */
         CborValue url_it;
         cbor_value_enter_container(&it, &url_it);
         if (!cbor_value_is_array(&url_it)) {
-            LOG_INFO("url entry no array\n)");
+            LOG_DEBUG("url entry no array\n)");
         }
 
         /* expect two entries: priority as int, url as byte string. bail out if not. */
@@ -256,7 +254,7 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
 
         int res = suit_cbor_get_string(&url_value_it, &url, &url_len);
         if (res) {
-            LOG_INFO("error parsing URL\n)");
+            LOG_DEBUG("error parsing URL\n)");
             return -1;
         }
         if (url_len >= manifest->urlbuf_len) {
@@ -267,7 +265,7 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
         manifest->urlbuf[url_len] = '\0';
     }
 
-    LOG_INFO("_dtv_fetch() fetching \"%s\" (url_len=%u)\n", manifest->urlbuf, (unsigned)url_len);
+    LOG_DEBUG("_dtv_fetch() fetching \"%s\" (url_len=%u)\n", manifest->urlbuf, (unsigned)url_len);
 
     int target_slot = riotboot_slot_other();
     riotboot_flashwrite_init(manifest->writer, target_slot);
@@ -371,9 +369,9 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
 
     CborValue arr;
 
-    LOG_INFO("storing components\n)");
+    LOG_DEBUG("storing components\n)");
     if (!cbor_value_is_array(it)) {
-        LOG_INFO("components field not an array\n");
+        LOG_DEBUG("components field not an array\n");
         return -1;
     }
     cbor_value_enter_container(it, &arr);
@@ -385,7 +383,7 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
             manifest->components_len += 1;
         }
         else {
-            LOG_INFO("too many components\n)");
+            LOG_DEBUG("too many components\n)");
             return SUIT_ERR_INVALID_MANIFEST;
         }
 
@@ -405,17 +403,17 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
                     current->identifier = value;
                     break;
                 case SUIT_COMPONENT_SIZE:
-                    LOG_INFO("skipping SUIT_COMPONENT_SIZE");
+                    LOG_DEBUG("skipping SUIT_COMPONENT_SIZE");
                     //current->size = value;
                     break;
                 case SUIT_COMPONENT_DIGEST:
                     current->digest = value;
                     break;
                 default:
-                    LOG_INFO("ignoring unexpected component data (nr. %i)\n", integer_key);
+                    LOG_DEBUG("ignoring unexpected component data (nr. %i)\n", integer_key);
             }
 
-            LOG_INFO("component %u parsed\n", n);
+            LOG_DEBUG("component %u parsed\n", n);
         }
 
         cbor_value_advance(&arr);
@@ -425,7 +423,7 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
     manifest->state |= SUIT_MANIFEST_HAVE_COMPONENTS;
     cbor_value_enter_container(it, &arr);
 
-    LOG_INFO("storing components done\n)");
+    LOG_DEBUG("storing components done\n)");
     return 0;
 }
 
@@ -486,12 +484,12 @@ static int _common_sequence_handler(suit_v4_manifest_t *manifest, int key, CborV
 {
 
     suit_manifest_handler_t handler = _suit_manifest_get_handler(key, _sequence_handlers, _sequence_handlers_len);
-    LOG_INFO("Handling handler with key %d at %p\n", key, handler);
+    LOG_DEBUG("Handling handler with key %d at %p\n", key, handler);
     if (handler) {
         return handler(manifest, key, it);
     }
     else {
-        LOG_INFO("Sequence handler not implemented, ID: %d\n", key);
+        LOG_DEBUG("Sequence handler not implemented, ID: %d\n", key);
         return -1;
     }
 }
@@ -506,7 +504,7 @@ int _handle_command_sequence(suit_v4_manifest_t *manifest, CborValue *bseq,
         suit_manifest_handler_t handler)
 {
 
-    LOG_INFO("Handling command sequence\n");
+    LOG_DEBUG("Handling command sequence\n");
     CborParser parser;
     CborValue it, arr;
 
@@ -516,7 +514,7 @@ int _handle_command_sequence(suit_v4_manifest_t *manifest, CborValue *bseq,
     }
 
     if (!cbor_value_is_array(&it)) {
-        LOG_INFO("Not an byte array\n");
+        LOG_DEBUG("Not an byte array\n");
         return -1;
     }
     cbor_value_enter_container(&it, &arr);
@@ -535,7 +533,7 @@ int _handle_command_sequence(suit_v4_manifest_t *manifest, CborValue *bseq,
         cbor_value_advance(&map);
         int res = handler(manifest, integer_key, &map);
         if (res < 0) {
-            LOG_INFO("Sequence handler error\n");
+            LOG_DEBUG("Sequence handler error\n");
             return res;
         }
         cbor_value_advance(&map);
