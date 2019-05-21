@@ -70,6 +70,13 @@ ifeq (,$(filter native,$(BOARD)))
   CFLAGS += -DETHOS_BAUDRATE=$(ETHOS_BAUDRATE) -DUSE_ETHOS_FOR_STDIO
 endif
 
+# riotboot is currently incompatible with the softdevice.
+# that gets automatically selected with gnrc_netdev_default, unless nrfmin is used.
+# So use that here in order to prevent the softdevice from being used.
+ifeq (nrf52dk,$(BOARD))
+  USEMODULE += nrfmin
+endif
+
 # Use different settings when compiling for one of the following (low-memory)
 # boards
 LOW_MEMORY_BOARDS := nucleo-f334r8
