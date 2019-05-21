@@ -57,7 +57,7 @@ suit/publish: $(SUIT_MANIFESTS) $(SLOT0_RIOT_BIN) $(SLOT1_RIOT_BIN)
 	done
 
 suit/notify: | $(filter suit/publish, $(MAKECMDGOALS))
-	@test -n "$(SUIT_CLIENT)"
+	@test -n "$(SUIT_CLIENT)" || { echo "error: SUIT_CLIENT unset!"; false; }
 	aiocoap-client -m POST "coap://$(SUIT_CLIENT)/suit/trigger" \
 		--payload "$(SUIT_COAP_ROOT)/$$(basename $(SUIT_MANIFEST_SIGNED_LATEST))" && \
 		echo "Triggered $(SUIT_CLIENT) to update."
