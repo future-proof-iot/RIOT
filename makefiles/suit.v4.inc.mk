@@ -10,6 +10,9 @@ SUIT_MANIFEST_LATEST ?= $(BINDIR_APP)-riot.suitv4.latest.bin
 SUIT_MANIFEST_SIGNED ?= $(BINDIR_APP)-riot.suitv4_signed.$(APP_VER).bin
 SUIT_MANIFEST_SIGNED_LATEST ?= $(BINDIR_APP)-riot.suitv4_signed.latest.bin
 
+# Long manifest names require more buffer space when parsing
+export CFLAGS += -DSOCK_URLPATH_MAXLEN=128
+
 SUIT_VENDOR ?= "riot-os.org"
 SUIT_SEQNR ?= $(APP_VER)
 SUIT_DEVICE_ID ?= $(BOARD)
