@@ -70,7 +70,7 @@ int cbor_map_iterate(CborValue *it, CborValue *key, CborValue *value)
 int suit_cbor_get_int(const CborValue *it, int *out)
 {
     if (!cbor_value_is_integer(it)) {
-        printf("expected integer type, got %u\n", cbor_value_get_type(it));
+        LOG_DEBUG("expected integer type, got %u\n", cbor_value_get_type(it));
         return SUIT_ERR_INVALID_MANIFEST;
     }
 
@@ -78,7 +78,7 @@ int suit_cbor_get_int(const CborValue *it, int *out)
      * is platform dependent. This is for lack of specification of actually
      * allowed values, to be made explicit at some point. */
     if (cbor_value_get_int_checked(it, out) == CborErrorDataTooLarge) {
-        printf("integer doesn't fit into int type\n");
+        LOG_DEBUG("integer doesn't fit into int type\n");
         return SUIT_ERR_INVALID_MANIFEST;
     }
 
@@ -130,7 +130,7 @@ int suit_cbor_subparse(CborParser *parser, CborValue *bseq, CborValue *it)
     size_t bytes_len = 0;
 
     if (!cbor_value_is_byte_string(bseq)) {
-        printf("suit_cbor_subparse(): bseq not a byte string\n");
+        LOG_DEBUG("suit_cbor_subparse(): bseq not a byte string\n");
         return -1;
     }
 
@@ -156,30 +156,30 @@ static int _v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf,
     map = it;
 
     if (cbor_map_iterate_init(&map, &it) != SUIT_OK) {
-        printf("manifest not map!\n");
+        LOG_DEBUG("manifest not map!\n");
         return SUIT_ERR_INVALID_MANIFEST;
     }
 
-    LOG_INFO("jumping into map\n)");
+    LOG_DEBUG("jumping into map\n)");
 
     while (cbor_map_iterate(&it, &key, &value)) {
         int integer_key;
         if (suit_cbor_get_int(&key, &integer_key) != SUIT_OK){
             return SUIT_ERR_INVALID_MANIFEST;
         }
-        printf("got key val=%i\n", integer_key);
+        LOG_DEBUG("got key val=%i\n", integer_key);
         suit_manifest_handler_t handler = getter(integer_key);
 
         if (handler) {
             int res = handler(manifest, integer_key, &value);
-            printf("handler res=%i\n", res);
+            LOG_DEBUG("handler res=%i\n", res);
             if (res < 0) {
                 LOG_INFO("handler returned <0\n)");
                 return SUIT_ERR_INVALID_MANIFEST;
             }
         }
         else {
-            printf("no handler found\n");
+            LOG_DEBUG("no handler found\n");
         }
     }
 
