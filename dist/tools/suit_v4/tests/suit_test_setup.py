@@ -103,11 +103,6 @@ def make_publish(board, server_url, cwd_dir, make_args, tag):
     subprocess.Popen(cmd, cwd=os.path.expanduser(cwd_dir)).wait()
 
 
-def port_cleanup(port):
-    cmd = ['fuser', '-k', port]
-    subprocess.call(cmd, stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL)
-
 PARSER = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 PARSER.add_argument('app_dir', help='Directory of application to test')
@@ -190,6 +185,7 @@ if __name__ == "__main__":
         # Provide node, initial flash
         if args.node is True:
             make_flash(board_node, app_dir, make_args)
+            make_reset(board_node, app_dir, port_node)
 
         # Publish tags
         if args.publish is True:
@@ -215,10 +211,3 @@ if __name__ == "__main__":
                     subprocess.check_call(["sudo", "kill", '-{}'.format(gpid)])
                 except:
                     logger.info("Failed to stop process {}".format(process.pid))
-        if args.ethos is True:
-            logger.info("Port ethos Cleanup")
-            port_cleanup(port_ethos)
-        if args.test is True:
-            logger.info("Port node Cleanup")
-            port_cleanup(port_node)
-           
