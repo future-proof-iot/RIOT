@@ -29,6 +29,10 @@
 #include "riotboot/slot.h"
 #include "cbor.h"
 
+#ifdef MODULE_SUITREG
+#include "suitreg.h"
+#endif
+
 #include "log.h"
 
 #define HELLO_HANDLER_MAX_STRLEN 32
@@ -269,6 +273,10 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
 
     LOG_INFO("_dtv_fetch() fetching \"%s\" (url_len=%u)\n", manifest->urlbuf, (unsigned)url_len);
 
+#ifdef MODULE_SUITREG
+    suitreg_notify(SUITREG_TYPE_STATUS | SUITREG_TYPE_BLOCK, SUIT_DOWNLOAD_START, manifest->components[0].size);
+#endif
+
     int target_slot = riotboot_slot_other();
     riotboot_flashwrite_init(manifest->writer, target_slot);
     int res = suit_coap_get_blockwise_url(manifest->urlbuf, COAP_BLOCKSIZE_64, suit_flashwrite_helper,
@@ -276,6 +284,9 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
 
     if (res) {
         LOG_INFO("image download failed\n)");
+#ifdef MODULE_SUITREG
+        suitreg_notify(SUITREG_TYPE_ERROR, SUIT_DOWNLOAD_ERROR, 0);
+#endif
         return res;
     }
 
@@ -288,11 +299,16 @@ static int _dtv_fetch(suit_v4_manifest_t *manifest, int key, CborValue *_it)
     }
 
     res = riotboot_flashwrite_verify_sha256(digest, manifest->components[0].size, target_slot);
+#ifdef MODULE_SUITREG
+        suitreg_notify(SUITREG_TYPE_BLOCK, SUIT_DIGEST_START, 0);
+#endif
     if (res) {
         LOG_INFO("image verification failed\n");
+#ifdef MODULE_SUITREG
+        suitreg_notify(SUITREG_TYPE_ERROR, SUIT_DIGEST_ERROR, 0);
+#endif
         return res;
     }
-
     manifest->state |= SUIT_MANIFEST_HAVE_IMAGE;
 
     return SUIT_OK;

@@ -33,6 +33,10 @@
 
 #include "log.h"
 
+#ifdef MODULE_SUITREG
+#include "suitreg.h"
+#endif
+
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
@@ -243,12 +247,21 @@ static int _manifest_handler(suit_v4_manifest_t *manifest, int key, CborValue *i
                       public_key, NULL, NULL);
 
     LOG_INFO("suit: verifying manifest signature...\n");
+#ifdef MODULE_SUITREG
+    suitreg_notify(SUITREG_TYPE_BLOCK | SUITREG_TYPE_STATUS, SUIT_SIGNATURE_START, 0);
+#endif
     int verification = cose_sign_verify(&manifest->cose, &signature,
             &pkey, manifest->validation_buf, SUIT_COSE_BUF_SIZE);
     if (verification != 0) {
         LOG_INFO("Unable to validate signature\n");
+#ifdef MODULE_SUITREG
+        suitreg_notify(SUITREG_TYPE_ERROR, SUIT_SIGNATURE_ERROR, 0);
+#endif
         return SUIT_ERR_SIGNATURE;
     }
+#ifdef MODULE_SUITREG
+        suitreg_notify(SUITREG_TYPE_STATUS, SUIT_SIGNATURE_END, 0);
+#endif
 
     return _v4_parse(manifest, manifest_buf,
                        manifest_len, suit_manifest_get_manifest_handler);

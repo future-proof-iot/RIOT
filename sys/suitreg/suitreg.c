@@ -30,19 +30,19 @@
 #define ENABLE_DEBUG    (0)
 #include "debug.h"
 
-#define _INVALID_TYPE(type) (((type) > SUIT_REG_TYPE_ALL))
+#define _INVALID_TYPE(type) (((type) > SUITREG_TYPE_ALL))
 
 /**
  * @brief   Keep the head of the registers thread as global variable
  */
-suit_reg_t *suit_reg = NULL;
+suitreg_t *suitreg = NULL;
 
-int suit_reg_register(suit_reg_t *entry)
+int suitreg_register(suitreg_t *entry)
 {
 #if DEVELHELP
     bool has_msg_q = thread_has_msg_queue(sched_threads[entry->pid]);
     if (!has_msg_q) {
-        LOG_ERROR("\n!!!! suit_reg: initialize message queue of thread %u "
+        LOG_ERROR("\n!!!! suitreg: initialize message queue of thread %u "
                   "using msg_init_queue() !!!!\n\n", entry->pid);
     }
     assert(has_msg_q);
@@ -52,21 +52,21 @@ int suit_reg_register(suit_reg_t *entry)
         return -EINVAL;
     }
 
-    LL_PREPEND(suit_reg, entry);
+    LL_PREPEND(suitreg, entry);
 
     return 0;
 }
 
-void suit_reg_unregister(suit_reg_t *entry)
+void suitreg_unregister(suitreg_t *entry)
 {
     if (_INVALID_TYPE(entry->type)) {
         return;
     }
 
-    LL_DELETE(suit_reg, entry);
+    LL_DELETE(suitreg, entry);
 }
 
-int suit_reg_notify(suit_reg_type_t reg_type, uint16_t type, uint32_t content)
+int suitreg_notify(suitreg_type_t reg_type, uint16_t type, uint32_t content)
 {
     msg_t msg;
     msg_t msg_r;
@@ -76,19 +76,19 @@ int suit_reg_notify(suit_reg_type_t reg_type, uint16_t type, uint32_t content)
 
     /* get registered threads*/
     int numof = 0;
-    suit_reg_t *elt = NULL;
-    LL_FOREACH(suit_reg, elt) {
+    suitreg_t *elt = NULL;
+    LL_FOREACH(suitreg, elt) {
         if(elt->type & reg_type) {
-            if (reg_type & SUIT_REG_TYPE_BLOCK & elt->type) {
-                DEBUG("suit_reg: sending blocking notification");
+            if (reg_type & SUITREG_TYPE_BLOCK & elt->type) {
+                DEBUG("suitreg: sending blocking notification");
                 msg_send_receive(&msg, &msg_r, elt->pid);
             }
             else {
-                DEBUG("suit_reg: sending status/error notification");
+                DEBUG("suitreg: sending status/error notification");
                 int ret = msg_try_send(&msg, elt->pid);
                 thread_yield();
                 if (ret < 1) {
-                    DEBUG("suit_reg: dropped message to %" PRIkernel_pid " (%s)\n", elt->pid,
+                    DEBUG("suitreg: dropped message to %" PRIkernel_pid " (%s)\n", elt->pid,
                         (ret == 0) ? "receiver queue is full" : "invalid receiver");
                 }
             }
