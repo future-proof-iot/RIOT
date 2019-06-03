@@ -38,17 +38,7 @@ You will get this message in the terminal:
 
     the public key is b'a0fc7fe714d0c81edccc50c9e3d9e6f9c72cc68c28990f235ede38e4553b4724'
 
-We also need to generate a header file for the public key to be included in the firmware
-that will be programed in the device.
-
-In examples/suit_update:
-
-    $ BOARD=samr21-xpro make suit/keyhdr
-
-You will get this message in the terminal:
-
-    xxd -i public.key > public_key.h
-
+This also generates the `public_key.h` that will be included in the built firmware.
 
 ## Standalone node Using Ethos
 
