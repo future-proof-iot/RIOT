@@ -2,6 +2,7 @@ include ../Makefile.tests_common
 
 # The following boards are known to fail or have not been tested.
 BOARD_BLACKLIST :=  arduino-duemilanove \
+                    arduino-leonardo \
                     arduino-mega2560 \
                     arduino-nano \
                     arduino-uno \
@@ -23,7 +24,8 @@ BOARD_BLACKLIST :=  arduino-duemilanove \
                     z1 \
                     #
 
-BOARD_INSUFFICIENT_MEMORY :=    nucleo-f030r8 \
+BOARD_INSUFFICIENT_MEMORY :=    i-nucleo-lrwan1 \
+                                nucleo-f030r8 \
                                 nucleo-f031k6 \
                                 nucleo-f042k6 \
                                 nucleo-l031k6 \

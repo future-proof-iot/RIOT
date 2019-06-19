@@ -795,7 +795,7 @@ ifneq (,$(filter skald_%,$(USEMODULE)))
 endif
 
 ifneq (,$(filter skald,$(USEMODULE)))
-  FEATURES_REQUIRED += radio_ble
+  FEATURES_REQUIRED += radio_nrfble
   USEMODULE += xtimer
   USEMODULE += random
 endif
@@ -830,6 +830,12 @@ endif
 
 ifneq (,$(filter tlsf-malloc,$(USEMODULE)))
   USEPKG += tlsf
+endif
+
+ifneq (,$(filter usbus,$(USEMODULE)))
+  FEATURES_REQUIRED += periph_usbdev
+  USEMODULE += core_thread_flags
+  USEMODULE += event
 endif
 
 ifneq (,$(filter uuid,$(USEMODULE)))
@@ -895,6 +901,11 @@ USEMODULE += $(filter periph_%,$(FEATURES_USED))
 
 # select cpu_check_address pseudomodule if the corresponding feature is used
 USEMODULE += $(filter cpu_check_address, $(FEATURES_USED))
+
+# include periph_common if any periph_* driver is used
+ifneq (,$(filter periph_%, $(USEMODULE)))
+  USEMODULE += periph_common
+endif
 
 # recursively catch transitive dependencies
 USEMODULE := $(sort $(USEMODULE))

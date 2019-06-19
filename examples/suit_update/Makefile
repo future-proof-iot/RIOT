@@ -59,14 +59,27 @@ endif
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
+# Change this to 0 to not use ethos
+USE_ETHOS ?= 1
+
+ifeq (1,$(USE_ETHOS))
 ifeq (,$(filter native,$(BOARD)))
   GNRC_NETIF_NUMOF := 2
   USEMODULE += ethos
+  USEMODULE += stdio_uart_rx
   USEMODULE += gnrc_uhcpc
 
   # ethos baudrate can be configured from make command
   ETHOS_BAUDRATE ?= 115200
   CFLAGS += -DETHOS_BAUDRATE=$(ETHOS_BAUDRATE) -DUSE_ETHOS_FOR_STDIO
+endif
+endif
+
+# riotboot is currently incompatible with the softdevice.
+# that gets automatically selected with gnrc_netdev_default, unless nrfmin is used.
+# So use that here in order to prevent the softdevice from being used.
+ifeq (nrf52dk,$(BOARD))
+  USEMODULE += nrfmin
 endif
 
 # Use different settings when compiling for one of the following (low-memory)

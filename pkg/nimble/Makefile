@@ -1,6 +1,6 @@
 PKG_NAME    = nimble
 PKG_URL     = https://github.com/apache/mynewt-nimble.git
-PKG_VERSION = a7b3c939146e735b59d55bff740c906bde6f86f9
+PKG_VERSION = 9d4bda2edcf0e7c2a03aa908321293a53361d258
 PKG_LICENSE = Apache-2.0
 
 TDIR = $(RIOTPKG)/$(PKG_NAME)
@@ -53,6 +53,9 @@ nimble_svc_gap:
 
 nimble_svc_gatt:
 	"$(MAKE)" -C $(PDIR)/nimble/host/services/gatt/src/ -f $(TDIR)/svc.gatt.mk
+
+nimble_svc_ipss:
+	"$(MAKE)" -C $(PDIR)/nimble/host/services/ipss/src/ -f $(TDIR)/svc.ipss.mk
 
 # controller specific modules
 nimble_transport_ram:

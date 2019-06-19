@@ -10,6 +10,9 @@ SUIT_MANIFEST_LATEST ?= $(BINDIR_APP)-riot.suitv4.latest.bin
 SUIT_MANIFEST_SIGNED ?= $(BINDIR_APP)-riot.suitv4_signed.$(APP_VER).bin
 SUIT_MANIFEST_SIGNED_LATEST ?= $(BINDIR_APP)-riot.suitv4_signed.latest.bin
 
+# Long manifest names require more buffer space when parsing
+export CFLAGS += -DSOCK_URLPATH_MAXLEN=128
+
 SUIT_VENDOR ?= "riot-os.org"
 SUIT_SEQNR ?= $(APP_VER)
 SUIT_DEVICE_ID ?= $(BOARD)
@@ -17,8 +20,13 @@ SUIT_KEY ?= secret.key
 SUIT_PUB ?= public.key
 SUIT_PUB_HDR ?= public_key.h
 
-$(SUIT_PUB_HDR):
-	xxd -i $(SUIT_PUB) > $@
+$(SUIT_KEY) $(SUIT_PUB):
+	@$(RIOTBASE)/dist/tools/suit_v4/gen_key.py
+
+$(SUIT_PUB_HDR): $(SUIT_PUB)
+	@xxd -i $(SUIT_PUB) > $@
+
+suit/genkey: $(SUIT_KEY) $(SUIT_PUB) $(SUIT_PUB_HDR)
 
 $(SUIT_MANIFEST): $(SLOT0_RIOT_BIN) $(SLOT1_RIOT_BIN)
 	$(RIOTBASE)/dist/tools/suit_v4/gen_manifest.py \
@@ -57,12 +65,7 @@ suit/publish: $(SUIT_MANIFESTS) $(SLOT0_RIOT_BIN) $(SLOT1_RIOT_BIN)
 	done
 
 suit/notify: | $(filter suit/publish, $(MAKECMDGOALS))
-	@test -n "$(SUIT_CLIENT)"
+	@test -n "$(SUIT_CLIENT)" || { echo "error: SUIT_CLIENT unset!"; false; }
 	aiocoap-client -m POST "coap://$(SUIT_CLIENT)/suit/trigger" \
 		--payload "$(SUIT_COAP_ROOT)/$$(basename $(SUIT_MANIFEST_SIGNED_LATEST))" && \
 		echo "Triggered $(SUIT_CLIENT) to update."
-
-suit/genkey:
-	$(RIOTBASE)/dist/tools/suit_v4/gen_key.py
-
-suit/keyhdr: suit/genkey $(SUIT_PUB_HDR)

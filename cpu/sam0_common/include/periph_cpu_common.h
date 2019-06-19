@@ -82,6 +82,7 @@ enum {
     PA = 0,                 /**< port A */
     PB = 1,                 /**< port B */
     PC = 2,                 /**< port C */
+    PD = 3,                 /**< port D */
 };
 
 /**
@@ -98,7 +99,7 @@ enum {
  * @name    Power mode configuration
  * @{
  */
-#ifdef CPU_FAM_SAML11
+#ifdef CPU_SAML1X
 #define PM_NUM_MODES        (2)
 #else
 #define PM_NUM_MODES        (3)
@@ -290,6 +291,25 @@ typedef struct {
 } i2c_conf_t;
 
 /**
+ * @brief   Timer device configuration
+ */
+typedef struct {
+    Tc *dev;                /**< pointer to the used Timer device */
+    IRQn_Type irq;          /**< IRQ# of Timer Interrupt */
+#ifdef MCLK
+    volatile uint32_t *mclk;/**< Pointer to MCLK->APBxMASK.reg */
+    uint32_t mclk_mask;     /**< MCLK_APBxMASK bits to enable Timer */
+    uint16_t gclk_id;       /**< TCn_GCLK_ID */
+#else
+    uint32_t pm_mask;       /**< PM_APBCMASK bits to enable Timer */
+    uint16_t gclk_ctrl;     /**< GCLK_CLKCTRL_ID for the Timer */
+#endif
+    uint16_t gclk_src;      /**< GCLK source which supplys Timer */
+    uint16_t prescaler;     /**< prescaler used by the Timer */
+    uint16_t flags;         /**< flags for CTRA, e.g. TC_CTRLA_MODE_COUNT32 */
+} tc32_conf_t;
+
+/**
  * @brief   Set up alternate function (PMUX setting) for a PORT pin
  *
  * @param[in] pin   Pin to set the multiplexing for
@@ -304,16 +324,42 @@ void gpio_init_mux(gpio_t pin, gpio_mux_t mux);
  *
  * @return              numeric id of the given SERCOM device
  */
-static inline int sercom_id(void *sercom)
+static inline int sercom_id(const void *sercom)
 {
-#if defined(CPU_FAM_SAMD21)
-    return ((((uint32_t)sercom) >> 10) & 0x7) - 2;
-#elif defined (CPU_FAM_SAML10) || defined (CPU_FAM_SAML11)
-    return ((((uint32_t)sercom) >> 10) & 0x7) - 1;
-#elif defined(CPU_FAM_SAML21) || defined(CPU_FAM_SAMR30)
-    /* Left side handles SERCOM0-4 while right side handles unaligned address of SERCOM5 */
-    return ((((uint32_t)sercom) >> 10) & 0x7) + ((((uint32_t)sercom) >> 22) & 0x04);
+#ifdef SERCOM0
+    if (sercom == SERCOM0)
+        return 0;
 #endif
+#ifdef SERCOM1
+    if (sercom == SERCOM1)
+        return 1;
+#endif
+#ifdef SERCOM2
+    if (sercom == SERCOM2)
+        return 2;
+#endif
+#ifdef SERCOM3
+    if (sercom == SERCOM3)
+        return 3;
+#endif
+#ifdef SERCOM4
+    if (sercom == SERCOM4)
+        return 4;
+#endif
+#ifdef SERCOM5
+    if (sercom == SERCOM5)
+        return 5;
+#endif
+#ifdef SERCOM6
+    if (sercom == SERCOM6)
+        return 6;
+#endif
+#ifdef SERCOM7
+    if (sercom == SERCOM7)
+        return 7;
+#endif
+
+    return -1;
 }
 
 /**
@@ -323,11 +369,20 @@ static inline int sercom_id(void *sercom)
  */
 static inline void sercom_clk_en(void *sercom)
 {
+    const uint8_t id = sercom_id(sercom);
 #if defined(CPU_FAM_SAMD21)
-    PM->APBCMASK.reg |= (PM_APBCMASK_SERCOM0 << sercom_id(sercom));
+    PM->APBCMASK.reg |= (PM_APBCMASK_SERCOM0 << id);
+#elif defined (CPU_FAM_SAMD5X)
+    if (id < 2) {
+        MCLK->APBAMASK.reg |= (1 << (id + 12));
+    } else if (id < 4) {
+        MCLK->APBBMASK.reg |= (1 << (id + 7));
+    } else {
+        MCLK->APBDMASK.reg |= (1 << (id - 4));
+    }
 #else
-    if (sercom_id(sercom) < 5) {
-        MCLK->APBCMASK.reg |= (MCLK_APBCMASK_SERCOM0 << sercom_id(sercom));
+    if (id < 5) {
+        MCLK->APBCMASK.reg |= (MCLK_APBCMASK_SERCOM0 << id);
     }
 #if defined(CPU_FAM_SAML21)
     else {
@@ -344,11 +399,20 @@ static inline void sercom_clk_en(void *sercom)
  */
 static inline void sercom_clk_dis(void *sercom)
 {
+    const uint8_t id = sercom_id(sercom);
 #if defined(CPU_FAM_SAMD21)
-    PM->APBCMASK.reg &= ~(PM_APBCMASK_SERCOM0 << sercom_id(sercom));
+    PM->APBCMASK.reg &= ~(PM_APBCMASK_SERCOM0 << id);
+#elif defined (CPU_FAM_SAMD5X)
+    if (id < 2) {
+        MCLK->APBAMASK.reg &= ~(1 << (id + 12));
+    } else if (id < 4) {
+        MCLK->APBBMASK.reg &= ~(1 << (id + 7));
+    } else {
+        MCLK->APBDMASK.reg &= ~(1 << (id - 4));
+    }
 #else
-    if (sercom_id(sercom) < 5) {
-        MCLK->APBCMASK.reg &= ~(MCLK_APBCMASK_SERCOM0 << sercom_id(sercom));
+    if (id < 5) {
+        MCLK->APBCMASK.reg &= ~(MCLK_APBCMASK_SERCOM0 << id);
     }
 #if defined (CPU_FAM_SAML21)
     else {
@@ -358,6 +422,17 @@ static inline void sercom_clk_dis(void *sercom)
 #endif
 }
 
+#ifdef CPU_FAM_SAMD5X
+static inline uint8_t _sercom_gclk_id_core(uint8_t sercom_id) {
+    if (sercom_id < 2)
+        return sercom_id + 7;
+    if (sercom_id < 4)
+        return sercom_id + 21;
+    else
+        return sercom_id + 30;
+}
+#endif
+
 /**
  * @brief   Configure generator clock for given SERCOM device
  *
@@ -366,19 +441,20 @@ static inline void sercom_clk_dis(void *sercom)
  */
 static inline void sercom_set_gen(void *sercom, uint32_t gclk)
 {
+    const uint8_t id = sercom_id(sercom);
 #if defined(CPU_FAM_SAMD21)
     GCLK->CLKCTRL.reg = (GCLK_CLKCTRL_CLKEN | gclk |
-                         (SERCOM0_GCLK_ID_CORE + sercom_id(sercom)));
+                         (SERCOM0_GCLK_ID_CORE + id));
     while (GCLK->STATUS.reg & GCLK_STATUS_SYNCBUSY) {}
+#elif defined(CPU_FAM_SAMD5X)
+    GCLK->PCHCTRL[_sercom_gclk_id_core(id)].reg = (GCLK_PCHCTRL_CHEN | gclk);
 #else
-    if (sercom_id(sercom) < 5) {
-        GCLK->PCHCTRL[SERCOM0_GCLK_ID_CORE + sercom_id(sercom)].reg =
-                                                    (GCLK_PCHCTRL_CHEN | gclk);
+    if (id < 5) {
+        GCLK->PCHCTRL[SERCOM0_GCLK_ID_CORE + id].reg = (GCLK_PCHCTRL_CHEN | gclk);
     }
 #if defined(CPU_FAM_SAML21)
     else {
-        GCLK->PCHCTRL[SERCOM5_GCLK_ID_CORE].reg =
-                                                    (GCLK_PCHCTRL_CHEN | gclk);
+        GCLK->PCHCTRL[SERCOM5_GCLK_ID_CORE].reg = (GCLK_PCHCTRL_CHEN | gclk);
     }
 #endif /* CPU_FAM_SAML21 */
 #endif
