@@ -1,38 +1,65 @@
 # Overview
 
 This example shows how to integrate SUIT-compliant firmware updates into a
-RIOT application. It implements basic support of the SUIT architecture using the manifest format specified in [draft-moran-suit-manifest-04](https://datatracker.ietf.org/doc/draft-moran-suit-manifest/04/).
+RIOT application. It implements basic support of the SUIT architecture using
+the manifest format specified in
+[draft-moran-suit-manifest-04](https://datatracker.ietf.org/doc/draft-moran-suit-manifest/04/).
+
+Table of contents:
+
+- [Prerequisites][prerequisites]
+- [Setup][setup]
+  - [Sign key generation][key-generation]
+  - [Setup a wired device using ethos][setup-wired]
+    - [Provision the device][setup-wired-provision]
+    - [Configure the network][setup-wired-network]
+  - [Setup a wireless device behind a border router][setup-wireless]
+    - [Provision the wireless device][setup-wireless-provision]
+    - [Configure the wireless network][setup-wireless-network]
+  - [Setup aiocoap fileserver][setup-aiocoap-fileserver]
+- [Perform an update][update]
+  - [Build and publish the firmware update][update-build-publish]
+  - [Notify an update to the device][update-notify]
+- [Detailed explanation][detailed-explanation]
 
 ## Prerequisites
-
-Dependencies:
+[prerequisites]: #Prerequisites
     
-    Python3 : - python > 3.6
-              - ed25519 > 1.4
-              - pyasn1  > 0.4.5
-              - cbor    > 1.0.0 
-              - aiocoap > 0.4
-              - Click   > 7.0
+- Install python dependencies (only Python3.6 and later is supported):
 
-When this was implemented aiocoap > 0.4 must be built from source you can follow 
-installation instructions here https://aiocoap.readthedocs.io/en/latest/installation.html.
-If you don't choose to clone the repo locally you still need to download "aiocoap-filesever"
- from https://github.com/chrysn/aiocoap/blob/master/contrib/aiocoap-fileserver.
+      $ sudo pip install ed25519 pyasn1 cbor click
 
-- RIOT repository checked out into $RIOTBASE
+- Install aiocoap from the source
 
-(*) cbor is installed as a dependency of aiocoap but is needed on its own if another
-server is used.
+      $ sudo pip3 install --upgrade "git+https://github.com/chrysn/aiocoap#egg=aiocoap[all]"
 
-# Setup
+  See the [aiocoap installation instructions](https://aiocoap.readthedocs.io/en/latest/installation.html)
+  for more details.
 
-## Key Generation
+- Clone this repository:
+
+      $ git clone https://github.com/future-proof-iot/RIOT -b suit
+      $ cd RIOT
+
+- In all setup below, `ethos` (EThernet Over Serial) is used to provide an IP
+  link between the host computer and a board.
+
+  Just build `ethos` and `uhcpd` with the following commands:
+
+      $ make -C dist/tools/ethos clean all
+      $ make -C dist/tools/uhcpd clean all
+
+## Setup
+[setup]: #Setup
+
+### Key Generation
+[key-generation]: #Key-generation
 
 To sign the manifest and for de the device to verify the manifest a key must be generated.
 
-In examples/suit_update:
+Simply use the `suit/genkey` make target:
 
-    $ BOARD=samr21-xpro make suit/genkey
+    $ BOARD=samr21-xpro make -C examples/suit_update suit/genkey
 
 You will get this message in the terminal:
 
@@ -40,30 +67,22 @@ You will get this message in the terminal:
 
 This also generates the `public_key.h` that will be included in the built firmware.
 
-## Standalone node Using Ethos
+### Setup a wired device using ethos
+[setup-wired]: #Setup-a-wired-device-using-ethos
 
-### Provision IoT device (initial flash)
+#### Provision the device
+[setup-wired-provision]: #Provision-the-device
 
 In order to get a SUIT capable firmware onto the node. In examples/suit_update:
 
-    $ BOARD=samr21-xpro make clean riotboot/flash -j4
+    $ BOARD=samr21-xpro make -C examples/suit_update clean riotboot/flash -j4
 
-### Setup network
+#### Configure the network
+[setup-wired-network]: #Configure-the-network
 
-First, you need to compile `ethos`.
-Go to `/dist/tools/ethos` and type:
+In one terminal and with the board already flashed and connected to /dev/ttyACM0:
 
-    $ make clean all
-
-Then, you need to compile UHCP.
-This tool is found in `/dist/tools/uhcpd`. So, as for `ethos`:
-
-    $ make clean all
-
-In one shell and with the board already flashed and connected to /dev/ttyACM0:
-
-    $ cd $RIOTBASE/dist/tools/ethos
-    $ sudo ./start_network.sh /dev/ttyACM0 tap0 2001:db8::1/64
+    $ sudo ./dist/tools/ethos/start_network.sh /dev/ttyACM0 tap0 2001:db8::/64
 
 Once everything is configured you will get:
 
@@ -84,41 +103,55 @@ Once everything is configured you will get:
 
 Keep this running (don't close the shell).
 
-Add a routable address to host:
+From another terminal, add a routable address to host:
 
     $ sudo ip address add 2001:db8::1/128 dev tap0
 
-If the network has been started as described above, the RIOT node will be
-reachable via link-local "fe80::2" on the ethos interface and not by its wireless
-interface global address.
+If the network has been started as described above, the RIOT updatable device
+is reachable on its link-local address `fe80::2` via the `tap0` interface but
+not when using its wireless interface global address:
 
-## Wireless Node with Border Router
+    $ ping6 fe80::2%tap0
 
-### Setup network
+### Setup a wireless device behind a border router
+[setup-wireless]: #Setup-a-wireless-device-behind-a-border-router
 
-A wireless node has no direct connection to the Internet we need to setup a border
-router, to this use any node with a 802.15.4 radio and follow the instructions to
-setup [gnrc_border_router](https://github.com/RIOT-OS/RIOT/tree/master/examples/gnrc_border_router).
-Pay attention to the prefix you will use, if you follow the border router instructions
-it would be '2001:db8::/64' when running:
+#### Configure the wireless network
+[setup-wireless-network]: #Configure-the-wireless-network
 
-    $ sudo sh start_network.sh /dev/ttyACMx tap0 2001:db8::1/64
+A wireless node has no direct connection to the Internet so a border router (BR)
+between 802.15.4 and Ethernet must be configured.
+Any board providing a 802.15.4 radio can be used as BR.
 
-Add a routable address to host:
+Plug the BR board on the computer and flash the
+[gnrc_border_router](https://github.com/RIOT-OS/RIOT/tree/master/examples/gnrc_border_router)
+application on it:
+
+    $ make BOARD=<BR board> -C examples/gnrc_border_router flash
+
+In on terminal, start the network (assuming on the host the virtual port of the
+board is `/dev/ttyACM0`):
+
+    $ sudo ./dist/tools/ethos/start_network.sh /dev/ttyACM0 tap0 2001:db8::/64
+
+Keep this terminal open.
+
+From another terminal on the host, add a routable address on the host `tap0`
+interface:
 
     $ sudo ip address add 2001:db8::1/128 dev tap0
 
-### Initial flash
+#### Provision the wireless device
+[setup-wireless-provision]: #Provision-the-wireless-device
 
-In this scenario the node will be connected through a border router so we flash the
-firmware without ethos. In examples/suit_update:
+In this scenario the node will be connected through a border router. Ethos must
+be disabled in the firmware when building and flashing the firmware:
 
-    $ USE_ETHOS=0 BOARD=samr21-xpro make clean riotboot/flash -j4
+    $ USE_ETHOS=0 BOARD=samr21-xpro make -C examples/suit_update clean riotboot/flash -j4
 
-We then open a serial terminal with the device to recover its global address.
-In examples/suit_update:
+Open a serial terminal on the device to get its global address:
 
-    $ USE_ETHOS=0 BOARD=samr21-xpro make term
+    $ USE_ETHOS=0 BOARD=samr21-xpro make -C examples/suit_update term
 
 If the Border Router is already set up when opening the terminal you should get
 
@@ -140,37 +173,51 @@ If the Border Router is already set up when opening the terminal you should get
 
     suit_coap: started.
 
-The global address would be: "2001:db8::7b7e:3255:1313:8d96". The address you see
-will be different according to your device and the chosen prefix. In this case
-the RIOT node will be reachable via its global address.
+Here the global IPv6 is `2001:db8::7b7e:3255:1313:8d96`.
+**The address will be different according to your device and the chosen prefix**.
+In this case the RIOT node can be reached from the host using its global address:
 
-## Setup fw-server
+    $ ping6 2001:db8::7b7e:3255:1313:8d96
 
-In this examples we are using aiocoap-fileserver. to start aiocoap-fileserver:
+### Setup aiocoap-fileserver
+[setup-aiocoap-fileserver]: #Setup-aiocoap-fileserver
 
-    $ mkdir ${RIOTBASE}/coaproot
-    $ <PATH>/aiocoap-fileserver ${RIOTBASE}/coaproot
+`aiocoap-fileserver` is used for hosting firmwares available for updates. Device
+retrieve the new firmware using the CoAP protocol.
 
-If aiocoap was cloned and built from source aiocoap-fileserver will be located
-at <AIOCOAP_BASE_DIR>/aiocoap/contrib.
+Clone the aiocoap repository:
 
-# Update IoT device
+    $ git clone https://github.com/chrysn/aiocoap.git ..
 
-## Build and publish firmware update
+Start `aiocoap-fileserver`:
+
+    $ mkdir -p coaproot
+    $ ../aiocoap/contrib/aiocoap-fileserver coaproot
+
+Keep the server running in the terminal.
+
+## Perform an update
+[update]: #Perform-an-update
+
+### Build and publish the firmware update
+[update-build-publish]: #Build-and-publish-the-firmware-update
 
 Currently, the build system assumes that it can publish files by simply copying
-them to a configurable folder. For this example, aiocoap-fileserver will then
-serve the files via CoAP.
+them to a configurable folder.
 
-Manifests and image files will be copied to $(SUIT_COAP_FSROOT)/$(SUIT_COAP_BASEPATH).
+For this example, aiocoap-fileserver serves the files via CoAP.
 
-In examples/suit_update:
+- To publish an update for a node in wired mode (behind ethos):
 
-    $ BOARD=samr21-xpro SUIT_COAP_SERVER=[2001:db8::1] make suit/publish
+      $ BOARD=samr21-xpro SUIT_COAP_SERVER=[2001:db8::1] make -C examples/suit_update suit/publish
 
-This will publish into the server new firmware for a samr21-xpro board. You should
+- To publish an update for a node in wireless mode (behind a border router):
+
+      $ BOARD=samr21-xpro USE_ETHOS=0 SUIT_COAP_SERVER=[2001:db8::1] make -C examples/suit_update suit/publish
+
+This publishes into the server a new firmware for a samr21-xpro board. You should
 see 6 pairs of messages indicating where (filepath) the file was published and
-the coap resource URI
+the corresponding coap resource URI
 
     ...
     published "/home/francisco/workspace/RIOT/examples/suit_update/bin/samr21-xpro/suit_update-riot.suitv4_signed.1557135946.bin"
@@ -179,24 +226,27 @@ the coap resource URI
            as "coap://[2001:db8::1]/fw/samr21-xpro/suit_update-riot.suitv4_signed.latest.bin"
     ...
 
-
-## Notify IoT device
+### Notify an update to the device
+[update-notify]: #Norify-an-update-to-the-device
 
 If the network has been started with a standalone node, the RIOT node should be
 reachable via link-local "fe80::2%tap0" on the ethos interface. If it was setup as a
 wireless device it will be reachable via its global address, something like "2001:db8::7b7e:3255:1313:8d96"
 
-Standalone:
+- In wired mode:
 
-    $ SUIT_COAP_SERVER=[2001:db8::1] SUIT_CLIENT=[fe80::2%tap0] BOARD=samr21-xpro make suit/notify
+      $ SUIT_COAP_SERVER=[2001:db8::1] SUIT_CLIENT=[fe80::2%tap0] BOARD=samr21-xpro make -C examples/suit_update suit/notify
 
-Wireless:
+- In wireless mode:
 
-    $ SUIT_COAP_SERVER=[2001:db8::1] SUIT_CLIENT=[2001:db8::7b7e:3255:1313:8d96] BOARD=samr21-xpro make suit/notify
+      $ SUIT_COAP_SERVER=[2001:db8::1] SUIT_CLIENT=[2001:db8::7b7e:3255:1313:8d96] BOARD=samr21-xpro make -C examples/suit_update suit/notify
 
-This will notify the node of new available manifest and it will fetch it.
 
-If using suit-v4 the node will hang for a couple of seconds when verifying the signature:
+This notifies the node of a new available manifest. Once the notification is
+received by the device, it fetches it.
+
+If using suit-v4 the node hangs for a couple of seconds when verifying the
+signature:
 
     ....
     INFO # suit_coap: got manifest with size 545
@@ -207,9 +257,10 @@ If using suit-v4 the node will hang for a couple of seconds when verifying the s
     INFO # suit: verifying manifest signature...
     ....
 
-Once the signature is validated it will continue validating other parts of tha manifest.
-Among these validation it will check some condition like the firmware offset position regarding
-to the running slot to see witch firmware image to fetch.
+Once the signature is validated it continues validating other parts of the
+manifest.
+Among these validations it checks some condition like firmware offset position
+in regards to the running slot to see witch firmware image to fetch.
 
     ....
     INFO # Handling handler with key 10 at 0x2b981
@@ -220,8 +271,10 @@ to the running slot to see witch firmware image to fetch.
     INFO # Sequence handler error
     ....
 
-Once manifest validation finishes it will fetch the image and start flashing.
-It will take some time to fetch and write to flash, you will a series of messages like:
+Once the manifest validation is complete, the application fetches the image
+and starts flashing.
+This step takes some time to fetch and write to flash, a series of messages like
+the following are printed to the terminal:
 
     ....
     riotboot_flashwrite: processing bytes 1344-1407
@@ -229,8 +282,8 @@ It will take some time to fetch and write to flash, you will a series of message
     riotboot_flashwrite: processing bytes 1472-1535
     ...
 
-Once the new image is written, final validation will be done and then
-the device will reboot and display:
+Once the new image is written, a final validation is performed and, in case of
+success, the application reboots on the new slot:
 
     2019-04-05 16:19:26,363 - INFO # riotboot: verifying digest at 0x20003f37 (img at: 0x20800 size: 80212)
     2019-04-05 16:19:26,704 - INFO # handler res=0
@@ -254,12 +307,13 @@ the device will reboot and display:
     running from slot 1
     Waiting for address autoconfiguration...
 
-The slot number should have changed from when you started the application.
-You can do the publish-notify sequence again to verify this.
+The slot number should have changed from after the application reboots.
+You can do the publish-notify sequence several times to verify this.
 
-# In depth explanation
+## Detailed explanation
+[detailed-explanation]: #Detailed-explanation
 
-## Node
+### Node
 
 For the suit_update to work there are important block that aren't normally built
 in a RIOT application:
@@ -271,7 +325,7 @@ in a RIOT application:
     * suit_coap
     * suit_v4
 
-### riotboot
+#### riotboot
 
 To be able to receive updates, the firmware on the device needs a bootloader
 that can decide from witch of the firmware images (new one and olds ones) to boot.
@@ -315,12 +369,12 @@ riotboot is not supported by all boards. Current supported boards are:
 * iotlab-m3
 * nrfxxx
 
-### suit
+#### suit
 
 The suit module encloses all the other suit_related module. Formally this only
 includes the sys/suit directory into the build system dirs.
 
-#### suit_coap
+- **suit_coap**
 
 To enable support for suit_updates over coap a new thread is created.
 This thread will expose 4 suit related resources:
@@ -337,7 +391,7 @@ When a new manifest url is received on the trigger resource a message is resent
 to the coap thread with the manifest's url. The thread will then fetch the
 manifest by a block coap request to the specified url.
 
-#### support for v4
+- **support for v4**
 
 This includes v4 manifest support. When a url is received in the /suit/trigger
 coap resource it will trigger a coap blockwise fetch of the manifest. When this
@@ -350,7 +404,7 @@ Digest validation is done once all the firmware is written to flash.
 From there the bootloader takes over, verifying the slot riotboot_hdr and boots
 from the newest image.
 
-## Network
+### Network
 
 For connecting the device with the internet we are using ethos (a simple
 ethernet over serial driver).
@@ -388,7 +442,7 @@ NOTE: using fd00:dead:beef::1 as an address for the coap server would also
 work and you wouldn't need to add a routable address to the tap interface since
 a route to the loopback interface (lo) is already configured.
 
-## Sever and File System Variables
+### Server and file system variables
 
 The following variables are defined in makefiles/suit.inc.mk:
 
@@ -422,7 +476,7 @@ $(SUIT_COAP_ROOT)/* and are signed that way.
 The whole tree under $(SUIT_COAP_FSROOT) is expected to be served via CoAP
 under $(SUIT_COAP_ROOT). This can be done by e.g., "aiocoap-fileserver $(SUIT_COAP_FSROOT)".
 
-## Makefile recipes
+### Makefile recipes
 
 The following recipes are defined in makefiles/suit.inc.mk
 
@@ -458,8 +512,5 @@ suit/notify: triggers a device update, it sends two requests:
 
 suit/genkey: this recipe generates a ed25519 key to sign the manifest
 
-suit/keyhdr: this recipe generates the public_key.h file that will store the
-    public key in the compiled firmware.
-
-**NOTE: to plugin a new server you would only have to change the suit/publish
+**NOTE**: to plugin a new server you would only have to change the suit/publish
 recipe, respecting or adjusting to the naming conventions.**
