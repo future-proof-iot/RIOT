@@ -73,6 +73,8 @@ PSEUDOMODULES += sock
 PSEUDOMODULES += sock_ip
 PSEUDOMODULES += sock_tcp
 PSEUDOMODULES += sock_udp
+PSEUDOMODULES += stdin
+PSEUDOMODULES += stdio_ethos
 PSEUDOMODULES += stdio_uart_rx
 PSEUDOMODULES += suit_%
 

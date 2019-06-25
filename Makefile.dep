@@ -398,6 +398,16 @@ ifneq (,$(filter stdio_rtt,$(USEMODULE)))
 endif
 
 ifneq (,$(filter shell,$(USEMODULE)))
+  USEMODULE += stdin
+endif
+
+ifneq (,$(filter stdio_ethos,$(USEMODULE)))
+  USEMODULE += ethos
+  USEMODULE += stdin
+  USEMODULE += stdio_uart
+endif
+
+ifneq (,$(filter stdin,$(USEMODULE)))
   ifneq (,$(filter stdio_uart,$(USEMODULE)))
     USEMODULE += stdio_uart_rx
   endif
@@ -838,6 +848,14 @@ ifneq (,$(filter usbus,$(USEMODULE)))
   USEMODULE += event
 endif
 
+ifneq (,$(filter usbus_cdc_ecm,$(USEMODULE)))
+  USEMODULE += iolist
+  USEMODULE += fmt
+  USEMODULE += usbus
+  USEMODULE += netdev_eth
+  USEMODULE += luid
+endif
+
 ifneq (,$(filter uuid,$(USEMODULE)))
   USEMODULE += hashes
   USEMODULE += random
@@ -890,13 +908,9 @@ FEATURES_OPTIONAL += periph_pm
 # include package dependencies
 -include $(USEPKG:%=$(RIOTPKG)/%/Makefile.dep)
 
-# remove required features from optional features
-FEATURES_OPTIONAL := $(filter-out $(FEATURES_REQUIRED),$(FEATURES_OPTIONAL))
-
-# add all optional but provided features to the list of used features
-FEATURES_USED := $(sort $(FEATURES_REQUIRED) $(filter $(FEATURES_OPTIONAL),$(FEATURES_PROVIDED)))
 
 # all periph features correspond to a periph submodule
+# FEATURES_USED is defined in Makefile.features
 USEMODULE += $(filter periph_%,$(FEATURES_USED))
 
 # select cpu_check_address pseudomodule if the corresponding feature is used
