@@ -66,6 +66,4 @@ results/
 .mypy_cache/
 
 # suit manifest keys
-secret.key
-public.key
-public_key.h
+keys/
