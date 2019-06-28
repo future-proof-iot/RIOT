@@ -16,18 +16,39 @@ export CFLAGS += -DSOCK_URLPATH_MAXLEN=128
 SUIT_VENDOR ?= "riot-os.org"
 SUIT_SEQNR ?= $(APP_VER)
 SUIT_DEVICE_ID ?= $(BOARD)
-SUIT_KEY ?= secret.key
-SUIT_PUB ?= public.key
-SUIT_PUB_HDR ?= public_key.h
+
+#
+# SUIT encryption keys
+#
+ifeq (1, $(RIOT_CI_BUILD))
+  SUIT_KEY_DIR ?= $(BINDIR)
+else
+  SUIT_KEY_DIR ?= $(RIOTBASE)/keys
+endif
+
+SUIT_KEY ?= $(SUIT_KEY_DIR)/secret.key
+SUIT_PUB ?= $(SUIT_KEY_DIR)/public.key
+
+SUIT_PUB_HDR = $(BINDIR)/riotbuild/public_key.h
+SUIT_PUB_HDR_DIR = $(dir $(SUIT_PUB_HDR))
+CFLAGS += -I$(SUIT_PUB_HDR_DIR)
+BUILDDEPS += $(SUIT_PUB_HDR)
 
 $(SUIT_KEY) $(SUIT_PUB):
+	@echo suit: generating key pair in $(SUIT_KEY_DIR)
+	@mkdir -p $(SUIT_KEY_DIR)
 	@$(RIOTBASE)/dist/tools/suit_v4/gen_key.py $(SUIT_KEY) $(SUIT_PUB)
 
 $(SUIT_PUB_HDR): $(SUIT_PUB)
-	@xxd -i $(SUIT_PUB) > $@
+	@mkdir -p $(SUIT_PUB_HDR_DIR)
+	@cd $(dir $(SUIT_PUB)) && xxd -i $(notdir $(SUIT_PUB)) > $@
 
-suit/genkey: $(SUIT_KEY) $(SUIT_PUB) $(SUIT_PUB_HDR)
+suit/genkey: $(SUIT_KEY) $(SUIT_PUB)
 
+suit/delkeys:
+	rm -f $(SUIT_KEY) $(SUIT_PUB)
+
+#
 $(SUIT_MANIFEST): $(SLOT0_RIOT_BIN) $(SLOT1_RIOT_BIN)
 	$(RIOTBASE)/dist/tools/suit_v4/gen_manifest.py \
 	  --template $(RIOTBASE)/dist/tools/suit_v4/test-2img.json \
