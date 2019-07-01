@@ -24,7 +24,7 @@ Table of contents:
 
 ## Prerequisites
 [prerequisites]: #Prerequisites
-    
+
 - Install python dependencies (only Python3.6 and later is supported):
 
       $ sudo pip install ed25519 pyasn1 cbor click
