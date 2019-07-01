@@ -53,23 +53,24 @@ void suit_coap_run(void);
 /* this is internal code that will go soon, thus skip Doxygen checks */
 #ifndef DOXYGEN
 
-/* subtree support */
+/**
+ * @brief   Coap subtree handler
+ *
+ * @param[in,out]   pkt     Packet struct containing the request. Is reused for
+ *                          the response
+ * @param[in]       buf     Buffer to write reply to
+ * @param[in]       len     Total length of the buffer associated with the
+ *                          request
+ * @param[in]       buf     Buffer to write reply to
+ *
+ * @returns     ssize_t     Size of the reply
+ */
 ssize_t coap_subtree_handler(coap_pkt_t *pkt, uint8_t *buf, size_t len,
                              void *context);
 
 /**
- * @brief   Type for CoAP resource subtrees
+ * @brief Coap block-wise-transfer size SZX
  */
-typedef const struct {
-    const coap_resource_t *resources;   /**< ptr to resource array  */
-    const size_t resources_numof;       /**< nr of entries in array */
-} coap_resource_subtree_t;
-
-typedef int (*coap_blockwise_cb_t)(void *arg, size_t offset, uint8_t *buf, size_t len, int more);
-
-extern const coap_resource_subtree_t coap_resource_subtree_suit;
-
-/* nanocoap blockwise client */
 typedef enum {
     COAP_BLOCKSIZE_32 = 1,
     COAP_BLOCKSIZE_64,
@@ -79,6 +80,49 @@ typedef enum {
     COAP_BLOCKSIZE_1024,
 } coap_blksize_t;
 
+/**
+ * @brief   Type for CoAP resource subtrees
+ */
+typedef const struct {
+    const coap_resource_t *resources;   /**< ptr to resource array  */
+    const size_t resources_numof;       /**< nr of entries in array */
+} coap_resource_subtree_t;
+
+/**
+ * @brief   Reference to the coap resource subtree
+ */
+extern const coap_resource_subtree_t coap_resource_subtree_suit;
+
+/**
+ * @brief   Coap blockwise request callback descriptor
+ *
+ * @param[in] arg      Pointer to be passed as arguments to the callback
+ * @param[in] offset   Offset of received data
+ * @param[in] buf      Pointer to the received data
+ * @param[in] len      Length of the received data
+ * @param[in] more     -1 for no option, 0 for last block, 1 for more blocks
+ *
+ * @returns    0       on success
+ * @returns   -1       on error
+ */
+typedef int (*coap_blockwise_cb_t)(void *arg, size_t offset, uint8_t *buf, size_t len, int more);
+
+/**
+ * @brief    Performs a blockwise coap get request to the specified url.
+ *
+ * This function will fetch the content of the specified resource path via
+ * block-wise-transfer. A coap_blockwise_cb_t will be called on each received
+ * block.
+ *
+ * @param[in]   url        url pointer to source path
+ * @param[in]   blksize    sender suggested SZX for the COAP block request
+ * @param[in]   callback   callback to be executed on each received block
+ * @param[in]   arg        optional function arguments
+ *
+ * @returns     -EINVAL    if an invalid url is provided
+ * @returns     -1         if failed to fetch the url content
+ * @returns      0         on success
+ */
 int suit_coap_get_blockwise_url(const char *url,
                                coap_blksize_t blksize,
                                coap_blockwise_cb_t callback, void *arg);
