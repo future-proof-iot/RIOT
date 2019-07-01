@@ -21,7 +21,7 @@ SUIT_PUB ?= public.key
 SUIT_PUB_HDR ?= public_key.h
 
 $(SUIT_KEY) $(SUIT_PUB):
-	@$(RIOTBASE)/dist/tools/suit_v4/gen_key.py
+	@$(RIOTBASE)/dist/tools/suit_v4/gen_key.py $(SUIT_KEY) $(SUIT_PUB)
 
 $(SUIT_PUB_HDR): $(SUIT_PUB)
 	@xxd -i $(SUIT_PUB) > $@
