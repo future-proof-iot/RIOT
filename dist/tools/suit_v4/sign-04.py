@@ -28,7 +28,6 @@ similarity between the naming in this script and that of C/C++ implementations.
 import cbor
 import sys
 import ed25519
-import eddsa
 import copy
 from pprint import pprint
 
