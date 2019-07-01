@@ -86,41 +86,6 @@ ssize_t coap_subtree_handler(coap_pkt_t *pkt, uint8_t *buf, size_t len,
                              len, COAP_FORMAT_TEXT, NULL, 0);
 }
 
-/* verbatim copy from sys/net/application_layer/nanocoap/nanocoap.c */
-static size_t _encode_uint(uint32_t *val)
-{
-    uint8_t *tgt = (uint8_t *)val;
-    size_t size = 0;
-
-    /* count number of used bytes */
-    uint32_t tmp = *val;
-    while(tmp) {
-        size++;
-        tmp >>= 8;
-    }
-
-    /* convert to network byte order */
-    tmp = htonl(*val);
-
-    /* copy bytewise, starting with first actually used byte */
-    *val = 0;
-    uint8_t *tmp_u8 = (uint8_t *)&tmp;
-    tmp_u8 += (4 - size);
-    for (unsigned n = 0; n < size; n++) {
-        *tgt++ = *tmp_u8++;
-    }
-
-    return size;
-}
-
-size_t coap_put_option_block(uint8_t *buf, uint16_t lastonum, unsigned blknum, unsigned szx, int more, uint16_t option)
-{
-    uint32_t blkopt = (blknum << 4) | szx | (more ? 0x8 : 0);
-    size_t olen = _encode_uint(&blkopt);
-
-    return coap_put_option(buf, lastonum, option, (uint8_t *)&blkopt, olen);
-}
-
 static ssize_t _nanocoap_request(sock_udp_t *sock, coap_pkt_t *pkt, size_t len)
 {
     ssize_t res;
@@ -173,7 +138,7 @@ static int _fetch_block(coap_pkt_t *pkt, uint8_t *buf, sock_udp_t *sock, const c
 
     pktpos += coap_build_hdr(pkt->hdr, COAP_TYPE_CON, NULL, 0, COAP_METHOD_GET, num);
     pktpos += coap_opt_put_uri_path(pktpos, 0, path);
-    pktpos += coap_put_option_block(pktpos, COAP_OPT_URI_PATH, num, blksize, 0, COAP_OPT_BLOCK2);
+    pktpos += coap_put_option_block2(pktpos, COAP_OPT_URI_PATH, num, blksize, 0);
 
     pkt->payload = pktpos;
     pkt->payload_len = 0;

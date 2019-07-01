@@ -79,9 +79,6 @@ typedef enum {
     COAP_BLOCKSIZE_1024,
 } coap_blksize_t;
 
-size_t coap_put_option_block(uint8_t *buf, uint16_t lastonum, unsigned blknum,
-                             unsigned szx, int more, uint16_t option);
-
 int suit_coap_get_blockwise_url(const char *url,
                                coap_blksize_t blksize,
                                coap_blockwise_cb_t callback, void *arg);
