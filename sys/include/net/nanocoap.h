@@ -903,6 +903,20 @@ size_t coap_put_option(uint8_t *buf, uint16_t lastonum, uint16_t onum, const uin
 size_t coap_put_option_block1(uint8_t *buf, uint16_t lastonum, unsigned blknum, unsigned szx, int more);
 
 /**
+ * @brief   Insert block2 option into buffer
+ *
+ * @param[out]  buf         buffer to write to
+ * @param[in]   lastonum    number of previous option (for delta calculation),
+ *                          must be < 27
+ * @param[in]   blknum      block number
+ * @param[in]   szx         SXZ value
+ * @param[in]   more        more flag (1 or 0)
+ *
+ * @returns     amount of bytes written to @p buf
+ */
+size_t coap_put_option_block2(uint8_t *buf, uint16_t lastonum, unsigned blknum, unsigned szx, int more);
+
+/**
  * @brief   Insert content type option into buffer
  *
  * @param[out]  buf             buffer to write to

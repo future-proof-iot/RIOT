@@ -641,6 +641,11 @@ size_t coap_put_option_block1(uint8_t *buf, uint16_t lastonum, unsigned blknum, 
     return coap_put_option_block(buf, lastonum, blknum, szx, more, COAP_OPT_BLOCK1);
 }
 
+size_t coap_put_option_block2(uint8_t *buf, uint16_t lastonum, unsigned blknum, unsigned szx, int more)
+{
+    return coap_put_option_block(buf, lastonum, blknum, szx, more, COAP_OPT_BLOCK2);
+}
+
 int coap_get_block(coap_pkt_t *pkt, coap_block1_t *block, uint16_t blkopt)
 {
     uint32_t blknum;
