@@ -306,8 +306,8 @@ static int _version_handler(suit_v4_manifest_t *manifest, int key,
         (cbor_value_get_int(it, &version) == CborNoError)) {
         if (version == SUIT_VERSION) {
             manifest->validated |= SUIT_VALIDATED_VERSION;
-            return 0;
             LOG_INFO("suit: validated manifest version\n)");
+            return 0;
         }
         else {
             return -1;
