@@ -9,7 +9,6 @@ Table of contents:
 
 - [Prerequisites][prerequisites]
 - [Setup][setup]
-  - [Sign key generation][key-generation]
   - [Setup a wired device using ethos][setup-wired]
     - [Provision the device][setup-wired-provision]
     - [Configure the network][setup-wired-network]
@@ -52,21 +51,6 @@ Table of contents:
 ## Setup
 [setup]: #Setup
 
-### Key Generation
-[key-generation]: #Key-generation
-
-To sign the manifest and for de the device to verify the manifest a key must be generated.
-
-Simply use the `suit/genkey` make target:
-
-    $ BOARD=samr21-xpro make -C examples/suit_update suit/genkey
-
-You will get this message in the terminal:
-
-    the public key is b'a0fc7fe714d0c81edccc50c9e3d9e6f9c72cc68c28990f235ede38e4553b4724'
-
-This also generates the `public_key.h` that will be included in the built firmware.
-
 ### Setup a wired device using ethos
 [setup-wired]: #Setup-a-wired-device-using-ethos
 
@@ -76,6 +60,10 @@ This also generates the `public_key.h` that will be included in the built firmwa
 In order to get a SUIT capable firmware onto the node. In examples/suit_update:
 
     $ BOARD=samr21-xpro make -C examples/suit_update clean riotboot/flash -j4
+
+This command also generates the cryptographic keys (private/public) used to
+sign and verify the manifest and images. See the "Key generation" section in
+[SUIT detailed explanation][detailed-explanation] for details.
 
 #### Configure the network
 [setup-wired-network]: #Configure-the-network
@@ -403,6 +391,20 @@ It will then fetch the firmware, write it to the inactive slot and reboot the de
 Digest validation is done once all the firmware is written to flash.
 From there the bootloader takes over, verifying the slot riotboot_hdr and boots
 from the newest image.
+
+#### Key Generation
+
+To sign the manifest and for the device to verify the manifest a pair of keys
+must be generated. Note that this is done automatically when building an
+updatable RIOT image with `riotboot` or `suit/publish` make targets.
+
+This is simply done using the `suit/genkey` make target:
+
+    $ BOARD=samr21-xpro make -C examples/suit_update suit/genkey
+
+You will get this message in the terminal:
+
+    Generated public key: 'a0fc7fe714d0c81edccc50c9e3d9e6f9c72cc68c28990f235ede38e4553b4724'
 
 ### Network
 
