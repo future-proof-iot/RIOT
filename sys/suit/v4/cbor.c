@@ -40,7 +40,7 @@
 static suit_manifest_handler_t _manifest_get_auth_wrapper_handler(int key);
 typedef suit_manifest_handler_t (*suit_manifest_handler_getter_t)(int key);
 
-int cbor_map_iterate_init(CborValue *map, CborValue *it)
+int suit_cbor_map_iterate_init(CborValue *map, CborValue *it)
 {
     if (!cbor_value_is_map(map)) {
         LOG_INFO("suit_v4_parse(): manifest not an map\n)");
@@ -52,7 +52,7 @@ int cbor_map_iterate_init(CborValue *map, CborValue *it)
     return SUIT_OK;
 }
 
-int cbor_map_iterate(CborValue *it, CborValue *key, CborValue *value)
+int suit_cbor_map_iterate(CborValue *it, CborValue *key, CborValue *value)
 {
     if (cbor_value_at_end(it)) {
         return 0;
@@ -155,14 +155,14 @@ static int _v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf,
 
     map = it;
 
-    if (cbor_map_iterate_init(&map, &it) != SUIT_OK) {
+    if (suit_cbor_map_iterate_init(&map, &it) != SUIT_OK) {
         LOG_DEBUG("manifest not map!\n");
         return SUIT_ERR_INVALID_MANIFEST;
     }
 
     LOG_DEBUG("jumping into map\n)");
 
-    while (cbor_map_iterate(&it, &key, &value)) {
+    while (suit_cbor_map_iterate(&it, &key, &value)) {
         int integer_key;
         if (suit_cbor_get_int(&key, &integer_key) != SUIT_OK){
             return SUIT_ERR_INVALID_MANIFEST;

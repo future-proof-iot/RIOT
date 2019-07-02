@@ -386,11 +386,11 @@ static int _component_handler(suit_v4_manifest_t *manifest, int key,
             return SUIT_ERR_INVALID_MANIFEST;
         }
 
-        cbor_map_iterate_init(&arr, &map);
+        suit_cbor_map_iterate_init(&arr, &map);
 
         suit_v4_component_t *current = &manifest->components[n];
 
-        while (cbor_map_iterate(&map, &key, &value)) {
+        while (suit_cbor_map_iterate(&map, &key, &value)) {
             // handle key, value
             int integer_key;
             if (suit_cbor_get_int(&key, &integer_key)) {

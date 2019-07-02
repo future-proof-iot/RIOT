@@ -148,8 +148,9 @@ int suit_v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf, size_t len);
 
 int suit_v4_policy_check(suit_v4_manifest_t *manifest);
 
-int cbor_map_iterate_init(CborValue *map, CborValue *it);
-int cbor_map_iterate(CborValue *map, CborValue *key, CborValue *value);
+
+int suit_cbor_map_iterate_init(CborValue *map, CborValue *it);
+int suit_cbor_map_iterate(CborValue *map, CborValue *key, CborValue *value);
 
 int suit_cbor_get_int(const CborValue *key, int *out);
 int suit_cbor_get_uint(const CborValue *key, unsigned *out);
