@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
-import click
-import hashlib
 import os
-import sys
+import hashlib
 import json
 import uuid
+
+import click
+
 from suit_manifest_encoder_04 import compile_to_suit
+
 
 def str2int(x):
     if x.startswith("0x"):
@@ -14,10 +16,12 @@ def str2int(x):
     else:
         return x
 
+
 def sha256_from_file(filepath):
     sha256 = hashlib.sha256()
     sha256.update(open(filepath, "rb").read())
     return sha256.digest()
+
 
 @click.command()
 @click.option("--template", "-t", required=True, type=click.File())
@@ -29,7 +33,8 @@ def sha256_from_file(filepath):
 @click.option("--uuid-class", "-C",  required=True)
 @click.option("--keyfile", "-K",  required=False, type=click.File())
 @click.argument("slotfiles", nargs=2, type=click.Path())
-def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor, uuid_class, keyfile):
+def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor,
+         uuid_class, keyfile):
 
     uuid_vendor = uuid.uuid5(uuid.NAMESPACE_DNS, uuid_vendor)
     uuid_class = uuid.uuid5(uuid_vendor, uuid_class)
@@ -38,12 +43,12 @@ def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor, uuid
 
     template["sequence-number"] = seqnr
     template["conditions"] = [
-            { "condition-vendor-id" : uuid_vendor.hex },
-            {  "condition-class-id" : uuid_class.hex },
+            {"condition-vendor-id": uuid_vendor.hex},
+            {"condition-class-id": uuid_class.hex},
         ]
 
     offsets = offsets.split(",")
-    offsets = [ str2int(x) for x in offsets ]
+    offsets = [str2int(x) for x in offsets]
 
     for slot, slotfile in enumerate(slotfiles):
         filename = slotfile
@@ -54,8 +59,8 @@ def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor, uuid
         template["components"][0]["images"][slot].update({
             "file": filename,
             "uri": uri,
-            "size" : size,
-            "digest" : sha256_from_file(slotfile),
+            "size": size,
+            "digest": sha256_from_file(slotfile),
             })
 
         template["components"][0]["images"][slot]["conditions"][0]["condition-component-offset"] = offset
@@ -68,5 +73,5 @@ def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor, uuid
         print(result)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
