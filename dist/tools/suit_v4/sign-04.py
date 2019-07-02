@@ -25,10 +25,13 @@ NOTE: It is expected that C and C++ parser implementations will be written
 against this script, so it does not adhere to PEP8 in order to maintain
 similarity between the naming in this script and that of C/C++ implementations.
 """
-import cbor
+
 import sys
-import ed25519
 import copy
+
+import cbor
+import ed25519
+
 from pprint import pprint
 
 from cryptography.hazmat.backends import default_backend
@@ -46,6 +49,7 @@ APPLICATION_OCTET_STREAM_ID = 42
 ES256 = -7
 EDDSA = -8
 
+
 def signWrapper(algo, private_key, public_key, encwrapper):
     wrapper = cbor.loads(encwrapper)
 
@@ -53,11 +57,12 @@ def signWrapper(algo, private_key, public_key, encwrapper):
     COSE_Sign = copy.deepcopy(wrapper[1])
     if not COSE_Sign:
         protected = cbor.dumps({
-            3: APPLICATION_OCTET_STREAM_ID, # Content Type
+            3: APPLICATION_OCTET_STREAM_ID,  # Content Type
         })
         unprotected = {
         }
         signatures = []
+
         # Create a COSE_Sign_Tagged object
         COSE_Sign = [
             protected,
@@ -69,8 +74,9 @@ def signWrapper(algo, private_key, public_key, encwrapper):
     if algo == EDDSA:
         public_bytes = public_key.to_bytes()
     else:
-        public_bytes = public_key.public_bytes(serialization.Encoding.DER,
-                            serialization.PublicFormat.SubjectPublicKeyInfo)
+        public_bytes = public_key.public_bytes(
+            serialization.Encoding.DER,
+            serialization.PublicFormat.SubjectPublicKeyInfo)
 
     # NOTE: Using RFC7093, Method 4
     digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
@@ -78,18 +84,19 @@ def signWrapper(algo, private_key, public_key, encwrapper):
     kid = digest.finalize()
     # Sign the payload
     protected = cbor.dumps({
-        1: algo, # alg
-    })    # Create the signing object
+        1: algo,  # alg
+    })
+    # Create the signing object
     unprotected = {
-        4: kid #kid
+        4: kid  # kid
     }
 
     Sig_structure = [
-        "Signature", # Context
-        COSE_Sign[0], # Body Protected
-        protected, # signature protected
-        b'', # External AAD
-        wrapper[2] # payload
+        "Signature",   # Context
+        COSE_Sign[0],  # Body Protected
+        protected,     # signature protected
+        b'',           # External AAD
+        wrapper[2]     # payload
     ]
     sig_str = cbor.dumps(Sig_structure, sort_keys=True)
 
@@ -107,9 +114,8 @@ def signWrapper(algo, private_key, public_key, encwrapper):
         signature
     ]
     COSE_Sign[3].append(COSE_Signature)
-    wrapper[1] = cbor.dumps(cbor.Tag(COSE_Sign_Tag,COSE_Sign), sort_keys=True)
+    wrapper[1] = cbor.dumps(cbor.Tag(COSE_Sign_Tag, COSE_Sign), sort_keys=True)
     return wrapper
-
 
 
 def main():
@@ -118,17 +124,18 @@ def main():
     with open(sys.argv[1], 'rb') as fd:
         priv_key_bytes = fd.read()
         try:
-            private_key = serialization.load_pem_private_key(priv_key_bytes, password=None, backend=default_backend())
+            private_key = serialization.load_pem_private_key(
+                priv_key_bytes, password=None, backend=default_backend())
         except ValueError:
             algo = EDDSA
             private_key = ed25519.SigningKey(priv_key_bytes)
-
 
     public_key = None
     with open(sys.argv[2], 'rb') as fd:
         pub_key_bytes = fd.read()
         try:
-            public_key = serialization.load_pem_public_key(pub_key_bytes, backend=default_backend())
+            public_key = serialization.load_pem_public_key(
+                pub_key_bytes, backend=default_backend())
         except ValueError:
             public_key = ed25519.VerifyingKey(pub_key_bytes)
 
@@ -139,9 +146,9 @@ def main():
 
     outDoc = signWrapper(algo, private_key, public_key, doc)
 
-
     with open(sys.argv[4], 'wb') as fd:
         fd.write(cbor.dumps(outDoc, sort_keys=True))
+
 
 if __name__ == '__main__':
     main()
