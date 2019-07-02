@@ -368,7 +368,7 @@ static void _suit_handle_url(const char *url)
 }
 
 int suit_flashwrite_helper(void *arg, size_t offset, uint8_t *buf, size_t len,
-                    int more)
+                           int more)
 {
     riotboot_flashwrite_t *writer = arg;
 
