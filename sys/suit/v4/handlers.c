@@ -43,10 +43,9 @@ static int _hello_handler(suit_v4_manifest_t *manifest, int key, CborValue *it)
     (void)manifest;
     (void)key;
 
-    char buf[HELLO_HANDLER_MAX_STRLEN];
-    size_t len = HELLO_HANDLER_MAX_STRLEN;
-
     if (cbor_value_is_text_string(it)) {
+        size_t len = HELLO_HANDLER_MAX_STRLEN;
+        char buf[HELLO_HANDLER_MAX_STRLEN];
         cbor_value_copy_text_string(it, buf, &len, NULL);
         return SUIT_OK;
     }
