@@ -56,15 +56,16 @@ def main(template, urlroot, offsets, slotfiles, output, seqnr, uuid_vendor,
         uri = os.path.join(urlroot, os.path.basename(filename))
         offset = offsets[slot]
 
-        template["components"][0]["images"][slot].update({
+        _image_slot = template["components"][0]["images"][slot]
+        _image_slot.update({
             "file": filename,
             "uri": uri,
             "size": size,
             "digest": sha256_from_file(slotfile),
             })
 
-        template["components"][0]["images"][slot]["conditions"][0]["condition-component-offset"] = offset
-        template["components"][0]["images"][slot]["file"] = filename
+        _image_slot["conditions"][0]["condition-component-offset"] = offset
+        _image_slot["file"] = filename
 
     result = compile_to_suit(template)
     if output:
