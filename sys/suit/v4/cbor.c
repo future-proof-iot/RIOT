@@ -88,13 +88,13 @@ int suit_cbor_get_int(const CborValue *it, int *out)
 int suit_cbor_get_string(const CborValue *it, const uint8_t **buf, size_t *len)
 {
     if (!(cbor_value_is_text_string(it) || cbor_value_is_byte_string(it) || cbor_value_is_length_known(it))) {
-        return -1;
+        return SUIT_ERR_INVALID_MANIFEST;
     }
     CborValue next = *it;
     cbor_value_get_string_length(it, len);
     cbor_value_advance(&next);
     *buf = next.ptr - *len;
-    return 0;
+    return SUIT_OK;
 }
 
 int suit_cbor_get_uint32(const CborValue *it, uint32_t *out)

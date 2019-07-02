@@ -34,17 +34,30 @@
 extern "C" {
 #endif
 
+/**
+ * @brief   Buffer size used for Cose
+ */
 #ifndef SUIT_COSE_BUF_SIZE
-#define SUIT_COSE_BUF_SIZE      512
+#define SUIT_COSE_BUF_SIZE              (512U)
 #endif
 
-#define SUIT_V4_COMPONENT_MAX 1
+/**
+ * @brief   Maximum number of components used for SUIT v4
+ */
+#define SUIT_V4_COMPONENT_MAX           (1U)
 
 /**
  * @brief Supported SUIT manifest version
  */
-#define SUIT_MANIFEST_VERSION        4
-#define SUIT_VERSION        1
+#define SUIT_MANIFEST_VERSION           (4)
+
+/**
+ * @brief Current SUIT serialization format version
+ *
+ * see https://tools.ietf.org/html/draft-moran-suit-manifest-04#section-8.2 for
+ * details
+ */
+#define SUIT_VERSION                    (1)
 
 /**
  * @brief SUIT error codes
@@ -91,45 +104,59 @@ typedef enum {
     SUIT_DIGEST_TYPE_PREIMAGE   = 4     /**< Pre-image digest */
 } suit_v4_digest_type_t;
 
+/**
+ * @brief SUIT component types
+ *
+ * Unofficial list from
+ * [suit-manifest-generator](https://github.com/ARMmbed/suit-manifest-generator)
+ */
 enum {
-    SUIT_COMPONENT_IDENTIFIER   = 1,
-    SUIT_COMPONENT_SIZE         = 2,
-    SUIT_COMPONENT_DIGEST       = 3,
+    SUIT_COMPONENT_IDENTIFIER   = 1,    /**< Identifier component */
+    SUIT_COMPONENT_SIZE         = 2,    /**< Size component */
+    SUIT_COMPONENT_DIGEST       = 3,    /**< Digest component */
 };
 
 /**
  * @brief SUIT v4 component struct
  */
 typedef struct {
-    uint32_t size;
-    CborValue identifier;
-    CborValue url;
-    CborValue digest;
+    uint32_t size;                      /**< Size */
+    CborValue identifier;               /**< Identifier*/
+    CborValue url;                      /**< Url */
+    CborValue digest;                   /**< Digest */
 } suit_v4_component_t;
 
 /**
  * @brief SUIT manifest struct
  */
 typedef struct {
-    cose_sign_t cose;   /**< COSE signature validation struct */
-    const uint8_t *buf; /**< ptr to the buffer of the manifest */
-    size_t len;         /**< length of the manifest */
-    uint32_t validated; /**< bitfield of validated policies */
-    uint32_t state;     /**< bitfield holding state information */
+    cose_sign_t cose;               /**< COSE signature validation struct */
+    const uint8_t *buf;             /**< ptr to the buffer of the manifest */
+    size_t len;                     /**< length of the manifest */
+    uint32_t validated;             /**< bitfield of validated policies */
+    uint32_t state;                 /**< bitfield holding state information */
 
+    /** List of components in the manifest */
     suit_v4_component_t components[SUIT_V4_COMPONENT_MAX];
     //CborValue components[SUIT_V4_COMPONENT_MAX];
-    unsigned components_len;
-    int component_current;
-    riotboot_flashwrite_t *writer;
+    unsigned components_len;        /**< Current number of components */
+    int component_current;          /**< Current component index */
+    riotboot_flashwrite_t *writer;  /**< Pointer to the riotboot flash writer */
+    /** Manifest validation buffer */
     uint8_t validation_buf[SUIT_COSE_BUF_SIZE];
-    cose_key_t *key;    /**< Ptr to the public key for validation */
-    char *urlbuf;
-    size_t urlbuf_len;
+    cose_key_t *key;                /**< Ptr to the public key for validation */
+    char *urlbuf;                   /**< Buffer containing the manifest url */
+    size_t urlbuf_len;              /**< Length of the manifest url */
 } suit_v4_manifest_t;
 
-#define SUIT_MANIFEST_HAVE_COMPONENTS 0x1
-#define SUIT_MANIFEST_HAVE_IMAGE 0x2
+/**
+ * @brief Bit flags used to determine if SUIT manifest contains components
+ */
+#define SUIT_MANIFEST_HAVE_COMPONENTS   (0x1)
+/**
+ * @brief Bit flags used to determine if SUIT manifest contains an image
+ */
+#define SUIT_MANIFEST_HAVE_IMAGE        (0x2)
 
 /**
  * @brief Parse a manifest
@@ -137,29 +164,122 @@ typedef struct {
  * @note The buffer is still required after parsing, please don't reuse the
  * buffer while the @p manifest is used
  *
- * @param   manifest    manifest context to store information in
- * @param   buf         buffer to parse the manifest from
- * @param   len         length of the manifest data in the buffer
+ * @param[in]   manifest    manifest context to store information in
+ * @param[in]   buf         buffer to parse the manifest from
+ * @param[in]   len         length of the manifest data in the buffer
  *
- * @return              SUIT_OK on parseable manifest
- * @return              negative @ref suit_v4_error_t code on error
+ * @return                  SUIT_OK on parseable manifest
+ * @return                  negative @ref suit_v4_error_t code on error
  */
 int suit_v4_parse(suit_v4_manifest_t *manifest, const uint8_t *buf, size_t len);
 
+/**
+ * @brief Check a manifest policy
+ *
+ * @param[in]   manifest    manifest context to check the policy for
+ *
+ * @return                  0 on valid manifest policy
+ * @return                  -1 on invalid manifest policy
+ */
 int suit_v4_policy_check(suit_v4_manifest_t *manifest);
 
-
+/**
+ * @brief Initialize a cbor iterator for SUIT cbor map container parsing
+ *
+ * @param[in]   map     the cbor container
+ * @param[in]   it      the cbor iterator
+ *
+ * @return              SUIT_OK when initialization is successful
+ * @return              SUIT_ERR_INVALID_MANIFEST if the manifest is not a cbor container
+ */
 int suit_cbor_map_iterate_init(CborValue *map, CborValue *it);
-int suit_cbor_map_iterate(CborValue *map, CborValue *key, CborValue *value);
 
-int suit_cbor_get_int(const CborValue *key, int *out);
-int suit_cbor_get_uint(const CborValue *key, unsigned *out);
+/**
+ * @brief Iterate over a cbor map container
+ *
+ * @param[in]   it      cbor container iterator
+ * @param[out]  key     the returned key
+ * @param[out]  value   the returned value
+ *
+ * @return              0 when the iterator is already at the end of the container
+ * @return              the number of returned (key, value) pair, e.g. 1
+ */
+int suit_cbor_map_iterate(CborValue *it, CborValue *key, CborValue *value);
+
+/**
+ * @brief Get cbor value as int
+ *
+ * @param[in]   it      cbor container iterator
+ * @param[out]  out     address of the returned integer
+ *
+ * @return              SUIT_OK on success
+ * @return              SUIT_ERR_INVALID_MANIFEST if value doesn't fit in an int
+ */
+int suit_cbor_get_int(const CborValue *it, int *out);
+
+/**
+ * @brief Get cbor value as unsigned
+ *
+ * @param[in]   it      cbor container iterator
+ * @param[out]  out     address of the returned unsigned
+ *
+ * @return              SUIT_OK on success
+ * @return              SUIT_ERR_INVALID_MANIFEST if value doesn't fit or cannot
+ *                      be converted to unsigned
+ */
+int suit_cbor_get_uint(const CborValue *it, unsigned *out);
+
+/**
+ * @brief Get cbor value as unsigned long
+ *
+ * @param[in]   it      cbor container iterator
+ * @param[out]  out     address of the returned unsigned long
+ *
+ * @return              SUIT_OK on success
+ * @return              SUIT_ERR_INVALID_MANIFEST if value doesn't fit or cannot
+ *                      be converted to unsigned long
+ */
 int suit_cbor_get_uint32(const CborValue *it, uint32_t *out);
+
+/**
+ * @brief Get cbor value as string
+ *
+ * @param[in]   it      cbor container iterator
+ * @param[out]  buf     address of the string buffer
+ * @param[out]  len     address of the len of the string
+ *
+ * @return              SUIT_OK on success
+ * @return              SUIT_ERR_INVALID_MANIFEST if value is not a valid string
+ */
 int suit_cbor_get_string(const CborValue *it, const uint8_t **buf, size_t *len);
+
+/**
+ * @brief Parser a cbor subsequence
+ *
+ * @param[in]   parser      ptr to cbor subparser
+ * @param[out]  bseq        subsequence value
+ * @param[out]  it          cbor iterator
+ *
+ * @return                  0 on success
+ * @return                  -1 if bseq is not a cbor string
+ * @return                  CborError code on other cbor parser errors
+ */
 int suit_cbor_subparse(CborParser *parser, CborValue *bseq, CborValue *it);
 
+/**
+ * @brief Helper function for writing bytes on flash a specified offset
+ *
+ * @param[in]   arg     ptr to flash writer
+ * @param[in]   offset  offset to write to on flash
+ * @param[in]   buf     bytes to write
+ * @param[in]   len     length of bytes to write
+ * @param[in]   more    whether more data is comming
+ *
+ * @return              0 on success
+ * @return              <0 on error
+ */
 int suit_flashwrite_helper(void *arg, size_t offset, uint8_t *buf, size_t len,
-                    int more);
+                           int more);
 
 #ifdef __cplusplus
 }
