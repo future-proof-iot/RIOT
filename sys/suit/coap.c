@@ -327,7 +327,7 @@ static void _suit_handle_url(const char *url)
         manifest.urlbuf = _url;
         manifest.urlbuf_len = SUIT_URL_MAX;
 
-        ssize_t res;
+        int res;
         if ((res = suit_v4_parse(&manifest, _manifest_buf, size)) != SUIT_OK) {
             printf("suit_v4_parse() failed. res=%i\n", res);
             return;
