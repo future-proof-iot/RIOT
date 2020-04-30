@@ -30,6 +30,11 @@ ifneq (,$(filter mpu_noexec_ram,$(USEMODULE)))
   FEATURES_REQUIRED += cortexm_mpu
 endif
 
+ifneq (,$(filter bpf,$(USEMODULE)))
+  USEMODULE += btree
+  USEMODULE += memarray
+endif
+
 ifneq (,$(filter lwip_%,$(USEMODULE)))
   USEPKG += lwip
 endif
