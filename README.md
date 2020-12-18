@@ -28,7 +28,7 @@ The focus of this fork of RIOT (based on [Release 2020.10](https://github.com/RI
 **Next Steps & Continuous Integration --** We plan to continue using a similar workflow with our upcoming contributions in the context of H2020 Sparta. We will upstream as much as possible our output to the master branch of RIOT, and in parallel, we will publish and maintain here (in this GitHub organization) complementary open source modules to showcase their potential integration.
 
 
-## SUIT-compliant secure IoT software updates
+## SUIT-compliant Secure IoT Software Updates
 
 We co-author the SUIT standard proposed by IETF to secure IoT software updates. The [SUIT specifications](https://tools.ietf.org/html/draft-ietf-suit-manifest-09) specify a security architecture, and the necessary metadata and cryptography to secure software updates,
 applicable on microcontroller-based devices, such as the ones RIOT runs on.
