@@ -31,16 +31,14 @@ The focus of this fork of RIOT (based on [Release 2020.10](https://github.com/RI
 We co-author the SUIT standard proposed by IETF to secure IoT software updates. The [SUIT specifications](https://tools.ietf.org/html/draft-ietf-suit-manifest-09) specify a security architecture, and the necessary metadata and cryptography to secure software updates,
 applicable on microcontroller-based devices, such as the ones RIOT runs on.
 We integrate SUIT support as described in our [publication on this topic](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8725488).
-We support a workflow as depicted below.
+We support a SUIT-compliant workflow as depicted below, which is the blueprint for the AirMonitor demo.
 
 To try this functionality, start with the [suit_update example](examples/suit_update).
 
 <a href="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp">
-  <img alt="SUIT" src="https://raw.githubusercontent.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp/deliverable-6-2/doc/figures/SUIT-update-workflow.jpg" width="600">
+  <img alt="SUIT" src="https://raw.githubusercontent.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp/deliverable-6-2/doc/figures/SUIT-update-workflow.jpg" width="700">
 </a>
 
-
-SUIT-update-workflow.svg
 
 ## Secure Low-power IoT Networking
 
