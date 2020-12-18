@@ -22,8 +22,8 @@ We here showcase the output of our work in the context of D6.2 as open source
 implementations and integrated with mainstream RIOT, which we forked in this repository.
 The focus of this fork of RIOT (based on [Release 2020.10](https://github.com/RIOT-OS/RIOT/releases/tag/2020.10)) is to :
 
-- highlight our on-going contributions upstream to the RIOT master branch including, but not limited to, SUIT-compliant secure OS software update support, and support for secure 6TiSCH networking.
-- offer a sneak peek at additional security mechanisms not (yet) integrated in RIOT master branch, and how this platform is used in the context of Sparta, e.g. a prototype of minimal virtual machines for software module hosting and isolation with rBPF.
+- highlight our **on-going contributions upstream to RIOT** master branch: hundreds of commits since the beginning of H2020 Sparta including, but not limited to, SUIT-compliant secure OS software update support, and support for secure 6TiSCH networking.
+- offer a sneak peek at **complementary security mechanisms we developed** but that are not (yet) integrated in RIOT master branch, and how this platform is used in the context of Sparta, e.g. a prototype of minimal virtual machines for software module hosting and isolation with rBPF.
 
 
 ## Prototype of SUIT-compliant secure IoT software updates
