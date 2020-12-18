@@ -2,67 +2,63 @@
   <img alt="RIOT" src="https://raw.githubusercontent.com/RIOT-OS/RIOT/master/doc/doxygen/src/riot-logo.svg" width="400">
 </a>
 
+<a href="https://sparta.eu/">
+  <img alt="Sparta" src="https://sparta.eu/assets/images/sparta-logo.png" width="400">
+</a>
+
 [![Nightly CI status master][master-ci-badge]][master-ci-link]
 [![GitHub release][release-badge]][release-link]
 [![License][license-badge]][license-link]
 [![API docs][api-badge]][api-link]
-[![Wiki][wiki-badge]][wiki-link]
-[![Merge chance][merge-chance-badge]][merge-chance-link]
-[![Stack Overflow questions][stackoverflow-badge]][stackoverflow-link]
-[![Twitter][twitter-badge]][twitter-link]
-[![IRC][irc-badge]][irc-link]
-[![Matrix][matrix-badge]][matrix-link]
 
-The friendly Operating System for IoT! **rBPF fork!**
+RIOT is an open source general-purpose operating system for low-power IoT devices,
+which we co-founded, contribute continuously to,
+and upon which we base our work in the context of H2020 Sparta for D6.2.
+For more information on RIOT, see the [master branch](https://github.com/RIOT-OS/RIOT), and our [prior publication](https://ilab-pub.imp.fu-berlin.de/papers/bghkl-rosos-18-prepub.pdf).
 
-RIOT is a real-time multi-threading operating system that supports a range of
-devices that are typically found in the Internet of Things (IoT):
-8-bit, 16-bit and 32-bit microcontrollers.
+The focus of this fork of RIOT (based on [Release 2020.10](https://github.com/RIOT-OS/RIOT/releases/tag/2020.10)) is to :
 
-RIOT is based on the following design principles: energy-efficiency, real-time
-capabilities, small memory footprint, modularity, and uniform API access,
-independent of the underlying hardware (this API offers partial POSIX
-compliance).
-
-RIOT is developed by an international open source community which is
-independent of specific vendors (e.g. similarly to the Linux community).
-RIOT is licensed with LGPLv2.1, a copyleft license which fosters
-indirect business models around the free open-source software platform
-provided by RIOT, e.g. it is possible to link closed-source code with the
-LGPL code.
-
-## FEATURES
-
-This fork contains the rBPF code and application as integrated with RIOT.
+- highlight our on-going contributions upstream to the RIOT master branch including, but not limited to, SUIT-compliant secure OS software update support, and support for secure 6TiSCH networking.
+- offer a sneak peek at other security mechanisms not (yet) integrated in RIOT master branch, and how this platform is used in the context of Sparta, e.g. a prototype of minimal virtual machines for software module hosting and isolation with rBPF.
 
 
-## GETTING STARTED
+## Prototype of SUIT-compliant secure IoT software updates
 
-Assuming you want to get started with the rBPF, the recommended approach is to start with the [gcoap_bpf example](examples/gcoap_bpf).
+We co-author the SUIT standard proposed by IETF to secure IoT software updates. The [SUIT specifications](https://tools.ietf.org/html/draft-ietf-suit-manifest-09) specify a security architecture, and the necessary metadata and cryptography to secure software updates,
+applicable on microcontroller-based devices, such as the ones RIOT runs on.
+We integrate SUIT support as described in our [publication on this topic](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8725488).
+We support a workflow as depicted below.
+
+To try this functionality, start with the [suit_update example](examples/suit_update).
+
+<a href="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp">
+  <img alt="SUIT" src="SUIT-update-workflow.svg" width="600">
+</a>
+
+
+SUIT-update-workflow.svg
+
+## Secure low-power networking
+
+We integrated Open-WSN, the standards-compliant open-source implementation of the 6TiSCH network stack, as described in our [publication on this topic](https://hal.inria.fr/hal-03064601/document).
+
+To try out this functionality, start by trying out the steps described in the [dedicated documentation](http://doc.riot-os.org/group__pkg__openwsn.html).
+
+We plan to use this base to implement and integrate support for upcoming secure IoT protocols such as EDHOC.
+
+Furthermore, we use this platform to benchmark and compare different secure IoT protocols stacks, for example as decribed in our [other publication on this topic](https://arxiv.org/pdf/2011.12035.pdf) comparatively evaluating DTLS1.3.
+
+
+## Prototype of miminal virtual machines using rBPF
+
+We designed rBPF, a register-based VM basedon extended Berkeley Packet Filters (eBPF). In our [publication on this topic](https://arxiv.org/pdf/2011.12047.pdf), we show that rBPF execution time overhead is tolerable for low-throughput, low-energy IoT devices. We further show that, using a VM based on rBPF requires only negligible memory overhead (less than 10% more memory). Compared to an alternative such as Wasm, rBPF is thus a promising approach to host small software modules, isolated from OS software, and updatable on-demand, over low-power networks.
+
+To try out this functionality, start with the [gcoap_bpf example](examples/gcoap_bpf).
+
 
 ## Required tooling
 
 - GCC, and the specific flavour required for the platform.
-- LLVM/Clang for creating BPF binaries
+- LLVM/Clang
 
 
-[api-badge]: https://img.shields.io/badge/docs-API-informational.svg
-[api-link]: https://riot-os.org/api/
-[irc-badge]: https://img.shields.io/badge/chat-IRC-brightgreen.svg
-[irc-link]: https://webchat.freenode.net?channels=%23riot-os
-[license-badge]: https://img.shields.io/github/license/RIOT-OS/RIOT
-[license-link]: https://github.com/RIOT-OS/RIOT/blob/master/LICENSE
-[master-ci-badge]: https://ci.riot-os.org/RIOT-OS/RIOT/master/latest/badge.svg
-[master-ci-link]: https://ci.riot-os.org/nightlies.html#master
-[matrix-badge]: https://img.shields.io/badge/chat-Matrix-brightgreen.svg
-[matrix-link]: https://matrix.to/#/#riot-os:matrix.org
-[merge-chance-badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fmerge-chance.info%2Fbadge%3Frepo%3DRIOT-OS/RIOT&color=informational
-[merge-chance-link]: https://merge-chance.info/target?repo=RIOT-OS/RIOT
-[release-badge]: https://img.shields.io/github/release/RIOT-OS/RIOT.svg
-[release-link]: https://github.com/RIOT-OS/RIOT/releases/latest
-[stackoverflow-badge]: https://img.shields.io/badge/stackoverflow-%5Briot--os%5D-yellow
-[stackoverflow-link]: https://stackoverflow.com/questions/tagged/riot-os
-[twitter-badge]: https://img.shields.io/badge/social-Twitter-informational.svg
-[twitter-link]: https://twitter.com/RIOT_OS
-[wiki-badge]: https://img.shields.io/badge/docs-Wiki-informational.svg
-[wiki-link]: https://github.com/RIOT-OS/RIOT/wiki
