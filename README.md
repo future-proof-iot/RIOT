@@ -1,5 +1,5 @@
 <a href="https://sparta.eu/">
-  <img alt="Sparta" src="https://sparta.eu/assets/images/sparta-logo.png" width="400">
+  <img alt="Sparta" src="https://www.sparta.eu/assets/images/sparta-logo-rectangle.png" width="400">
 </a>
 
 <a href="https://riot-os.org/">
