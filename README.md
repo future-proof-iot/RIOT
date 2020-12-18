@@ -25,7 +25,7 @@ The focus of this fork of RIOT (based on [Release 2020.10](https://github.com/RI
 - highlight some of **our on-going contributions upstream to RIOT** master branch: hundreds of commits since the beginning of H2020 Sparta including, but not limited to, SUIT-compliant secure OS software update support, and support for secure 6TiSCH networking.
 - offer a sneak peek at **complementary security mechanisms we developed** but that are not (yet) integrated in RIOT master branch, and how this platform is used in the context of Sparta, e.g. a prototype of minimal virtual machines for software module hosting and isolation with rBPF.
 
-**Next Steps --** We plan to continue using a similar workflow with our upcoming contributions in the context of H2020 Sparta. We will upstream as much as possible our output to the master branch of RIOT, and in parallel, we will publish and maintain complementary open source modules to showcase their potential integration.
+**Next Steps & Continuous Integration --** We plan to continue using a similar workflow with our upcoming contributions in the context of H2020 Sparta. We will upstream as much as possible our output to the master branch of RIOT, and in parallel, we will publish and maintain here (in this GitHub organization) complementary open source modules to showcase their potential integration.
 
 
 ## SUIT-compliant secure IoT software updates
