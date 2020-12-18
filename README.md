@@ -62,18 +62,19 @@ To try out this functionality, start with the [gcoap_bpf example](examples/gcoap
 
 ## Some Related Publications
 
-- [K. Zandberg et al. "Secure firmware updates for constrained IoT devices using open standards: A reality check." IEEE Access, 2019](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8725488)
-- [B. Moran et al. "A Concise Binary Object Representation (CBOR)-based Serialization Format for the Software Updates for Internet of Things (SUIT) Manifest", IETF Internet Draft draft-ietf-suit-manifest-09, 2020](https://tools.ietf.org/html/draft-ietf-suit-manifest-09)
-- [K. Zandberg, E. Baccelli. "Minimal Virtual Machines on IoT Microcontrollers: The Case of Berkeley Packet Filters with rBPF," IFIP/IEEE PEMWN, 2020](https://arxiv.org/pdf/2011.12047.pdf)
-- [G. Restuccia, et al. "Low-Power IoT Communication Security: On the Performance of DTLS and TLS 1.3," IFIP/IEEE PEMWN, 2020](https://arxiv.org/pdf/2011.12035.pdf)
-- [T. Claeys et al. "RIOT and OpenWSN 6TiSCH: Happy Together", Inria Research Report, 2020.](https://hal.inria.fr/hal-03064601/document)
-- [RIOT Release 2020.10](https://github.com/RIOT-OS/RIOT/releases/tag/2020.10)
+- K. Zandberg et al. "[Secure firmware updates for constrained IoT devices using open standards: A reality check](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8725488)." IEEE Access, 2019
+- B. Moran et al. "[A Concise Binary Object Representation (CBOR)-based Serialization Format for the Software Updates for Internet of Things (SUIT) Manifest](https://tools.ietf.org/html/draft-ietf-suit-manifest-09)." IETF Internet Draft draft-ietf-suit-manifest-09, 2020
+- K. Zandberg, E. Baccelli. "[Minimal Virtual Machines on IoT Microcontrollers: The Case of Berkeley Packet Filters with rBPF](https://arxiv.org/pdf/2011.12047.pdf)." IFIP/IEEE PEMWN, 2020
+- G. Restuccia, et al. "[Low-Power IoT Communication Security: On the Performance of DTLS and TLS 1.3](https://arxiv.org/pdf/2011.12035.pdf)." IFIP/IEEE PEMWN, 2020
+- T. Claeys et al. "[RIOT and OpenWSN 6TiSCH: Happy Together](https://hal.inria.fr/hal-03064601/document).", Inria Research Report, 2020
+- RIOT [Release 2020.10](https://github.com/RIOT-OS/RIOT/releases/tag/2020.10)
 
 
 ## Required Tooling
 
 - GCC, and the specific flavour required for the platform.
 - LLVM/Clang
+
 
 [api-badge]: https://img.shields.io/badge/docs-API-informational.svg
 [api-link]: https://riot-os.org/api/
