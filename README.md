@@ -18,7 +18,7 @@ For more information on RIOT, see the [master branch](https://github.com/RIOT-OS
 
 ## H2020 Sparta D6.2 : Security-Enhanced IoT Operating System Software
 
-We showcase our showcase the output of our work in the context of D6.2 as open source
+We here showcase the output of our work in the context of D6.2 as open source
 implementations and integrated with mainstream RIOT, which we forked in this repository.
 The focus of this fork of RIOT (based on [Release 2020.10](https://github.com/RIOT-OS/RIOT/releases/tag/2020.10)) is to :
 
@@ -36,13 +36,13 @@ We support a workflow as depicted below.
 To try this functionality, start with the [suit_update example](examples/suit_update).
 
 <a href="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp">
-  <img alt="SUIT" src="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp/raw/deliverable-6-2/doc/figures/SUIT-update-workflow.svg" width="600">
+  <img alt="SUIT" src="https://raw.githubusercontent.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp/deliverable-6-2/doc/figures/SUIT-update-workflow.jpg" width="600">
 </a>
 
 
 SUIT-update-workflow.svg
 
-## Secure low-power networking
+## Secure Low-power IoT Networking
 
 We integrated Open-WSN, the standards-compliant open-source implementation of the 6TiSCH network stack, as described in our [publication on this topic](https://hal.inria.fr/hal-03064601/document).
 
@@ -53,14 +53,14 @@ We plan to use this base to implement and integrate support for upcoming secure 
 Furthermore, we use this platform to benchmark and compare different secure IoT protocols stacks, for example as decribed in our [other publication on this topic](https://arxiv.org/pdf/2011.12035.pdf) comparatively evaluating DTLS1.3.
 
 
-## Prototype of miminal virtual machines using rBPF
+## Prototype of Low-power Virtual Machines using rBPF
 
 We designed rBPF, a register-based VM basedon extended Berkeley Packet Filters (eBPF). In our [publication on this topic](https://arxiv.org/pdf/2011.12047.pdf), we show that rBPF execution time overhead is tolerable for low-throughput, low-energy IoT devices. We further show that, using a VM based on rBPF requires only negligible memory overhead (less than 10% more memory). Compared to an alternative such as Wasm, rBPF is thus a promising approach to host small software modules, isolated from OS software, and updatable on-demand, over low-power networks.
 
 To try out this functionality, start with the [gcoap_bpf example](examples/gcoap_bpf).
 
 
-## Required tooling
+## Prerequisites / Required Tooling
 
 - GCC, and the specific flavour required for the platform.
 - LLVM/Clang
