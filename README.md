@@ -22,7 +22,7 @@ We here showcase the output of our work in the context of D6.2 as open source
 implementations and integrated with mainstream RIOT, which we forked in this repository.
 The focus of this fork of RIOT (based on [Release 2020.10](https://github.com/RIOT-OS/RIOT/releases/tag/2020.10)) is to :
 
-- highlight our **on-going contributions upstream to RIOT** master branch: hundreds of commits since the beginning of H2020 Sparta including, but not limited to, SUIT-compliant secure OS software update support, and support for secure 6TiSCH networking.
+- highlight some of **our on-going contributions upstream to RIOT** master branch: hundreds of commits since the beginning of H2020 Sparta including, but not limited to, SUIT-compliant secure OS software update support, and support for secure 6TiSCH networking.
 - offer a sneak peek at **complementary security mechanisms we developed** but that are not (yet) integrated in RIOT master branch, and how this platform is used in the context of Sparta, e.g. a prototype of minimal virtual machines for software module hosting and isolation with rBPF.
 
 
@@ -63,7 +63,14 @@ To try out this functionality, start with the [gcoap_bpf example](examples/gcoap
 - GCC, and the specific flavour required for the platform.
 - LLVM/Clang
 
+## Some Related Publications
 
+- [K. Zandberg et al. "Secure firmware updates for constrained IoT devices using open standards: A reality check." IEEE Access, 2019](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8725488)
+- [B. Moran et al. "A Concise Binary Object Representation (CBOR)-based Serialization Format for the Software Updates for Internet of Things (SUIT) Manifest", IETF Internet Draft draft-ietf-suit-manifest-09, 2020](https://tools.ietf.org/html/draft-ietf-suit-manifest-09)
+- [K. Zandberg, E. Baccelli. "Minimal Virtual Machines on IoT Microcontrollers: The Case of Berkeley Packet Filters with rBPF," IFIP/IEEE PEMWN, 2020](https://arxiv.org/pdf/2011.12047.pdf)
+- [G. Restuccia, et al. "Low-Power IoT Communication Security: On the Performance of DTLS and TLS 1.3," IFIP/IEEE PEMWN, 2020](https://arxiv.org/pdf/2011.12035.pdf)
+- [T. Claeys et al. "RIOT and OpenWSN 6TiSCH: Happy Together", Inria Research Report, 2020.](https://hal.inria.fr/hal-03064601/document)
+- [RIOT Release 2020.10](https://github.com/RIOT-OS/RIOT/releases/tag/2020.10)
 
 [api-badge]: https://img.shields.io/badge/docs-API-informational.svg
 [api-link]: https://riot-os.org/api/
