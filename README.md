@@ -1,10 +1,11 @@
+<a href="https://sparta.eu/">
+  <img alt="Sparta" src="https://sparta.eu/assets/images/sparta-logo.png" width="400">
+</a>
+
 <a href="https://riot-os.org/">
   <img alt="RIOT" src="https://raw.githubusercontent.com/RIOT-OS/RIOT/master/doc/doxygen/src/riot-logo.svg" width="400">
 </a>
 
-<a href="https://sparta.eu/">
-  <img alt="Sparta" src="https://sparta.eu/assets/images/sparta-logo.png" width="400">
-</a>
 
 [![Nightly CI status master][master-ci-badge]][master-ci-link]
 [![GitHub release][release-badge]][release-link]
@@ -32,7 +33,7 @@ We support a workflow as depicted below.
 To try this functionality, start with the [suit_update example](examples/suit_update).
 
 <a href="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp">
-  <img alt="SUIT" src="SUIT-update-workflow.svg" width="600">
+  <img alt="SUIT" src="doc/figures/SUIT-update-workflow.svg" width="600">
 </a>
 
 
@@ -62,3 +63,22 @@ To try out this functionality, start with the [gcoap_bpf example](examples/gcoap
 - LLVM/Clang
 
 
+
+[api-badge]: https://img.shields.io/badge/docs-API-informational.svg
+[api-link]: https://riot-os.org/api/
+[irc-badge]: https://img.shields.io/badge/chat-IRC-brightgreen.svg
+[irc-link]: https://webchat.freenode.net?channels=%23riot-os
+[license-badge]: https://img.shields.io/github/license/RIOT-OS/RIOT
+[license-link]: https://github.com/RIOT-OS/RIOT/blob/master/LICENSE
+[master-ci-badge]: https://ci.riot-os.org/RIOT-OS/RIOT/master/latest/badge.svg
+[master-ci-link]: https://ci.riot-os.org/nightlies.html#master
+[matrix-badge]: https://img.shields.io/badge/chat-Matrix-brightgreen.svg
+[matrix-link]: https://matrix.to/#/#riot-os:matrix.org
+[release-badge]: https://img.shields.io/github/release/RIOT-OS/RIOT.svg
+[release-link]: https://github.com/RIOT-OS/RIOT/releases/latest
+[stackoverflow-badge]: https://img.shields.io/badge/stackoverflow-%5Briot--os%5D-yellow
+[stackoverflow-link]: https://stackoverflow.com/questions/tagged/riot-os
+[twitter-badge]: https://img.shields.io/badge/social-Twitter-informational.svg
+[twitter-link]: https://twitter.com/RIOT_OS
+[wiki-badge]: https://img.shields.io/badge/docs-Wiki-informational.svg
+[wiki-link]: https://github.com/RIOT-OS/RIOT/wiki
