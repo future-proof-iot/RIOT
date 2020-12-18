@@ -13,14 +13,17 @@
 [![API docs][api-badge]][api-link]
 
 RIOT is an open source general-purpose operating system for low-power IoT devices,
-which we co-founded, contribute continuously to,
-and upon which we base our work in the context of H2020 Sparta for D6.2.
+which we co-founded, contribute continuously to.
 For more information on RIOT, see the [master branch](https://github.com/RIOT-OS/RIOT), and our [prior publication](https://ilab-pub.imp.fu-berlin.de/papers/bghkl-rosos-18-prepub.pdf).
 
+## H2020 Sparta D6.2 : Security-Enhanced IoT Operating System Software
+
+We showcase our showcase the output of our work in the context of D6.2 as open source
+implementations and integrated with mainstream RIOT, which we forked in this repository.
 The focus of this fork of RIOT (based on [Release 2020.10](https://github.com/RIOT-OS/RIOT/releases/tag/2020.10)) is to :
 
 - highlight our on-going contributions upstream to the RIOT master branch including, but not limited to, SUIT-compliant secure OS software update support, and support for secure 6TiSCH networking.
-- offer a sneak peek at other security mechanisms not (yet) integrated in RIOT master branch, and how this platform is used in the context of Sparta, e.g. a prototype of minimal virtual machines for software module hosting and isolation with rBPF.
+- offer a sneak peek at additional security mechanisms not (yet) integrated in RIOT master branch, and how this platform is used in the context of Sparta, e.g. a prototype of minimal virtual machines for software module hosting and isolation with rBPF.
 
 
 ## Prototype of SUIT-compliant secure IoT software updates
@@ -33,7 +36,7 @@ We support a workflow as depicted below.
 To try this functionality, start with the [suit_update example](examples/suit_update).
 
 <a href="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp">
-  <img alt="SUIT" src="doc/figures/SUIT-update-workflow.svg" width="600">
+  <img alt="SUIT" src="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp/raw/deliverable-6-2/doc/figures/SUIT-update-workflow.svg" width="600">
 </a>
 
 
