@@ -22,7 +22,7 @@
 #include "msg.h"
 
 #include "net/gcoap.h"
-#include "kernel_types.h"
+#include "sched.h"
 #include "shell.h"
 
 #define MAIN_QUEUE_SIZE (4)
