@@ -53,7 +53,7 @@ which we also show in a [video tutorial](videos/riot-openwsn.mp4), which demonst
 
 We plan to use this base, purposely designed to be extensible above the libraries providing OSCORE and COSE support, to implement and integrate complementary upcoming secure IoT protocols such as EDHOC ([Ephemeral Diffie-Hellman Over COSE](https://tools.ietf.org/html/draft-ietf-lake-edhoc)) which build upon OSCORE and COSE.
 
-Furthermore, we use this platform to benchmark and compare different secure IoT protocols stacks, for example as decribed in our [other publication on this topic](https://arxiv.org/pdf/2011.12035.pdf) comparatively evaluating DTLS1.3.
+Furthermore, we use this platform to benchmark and compare different secure IoT protocols stacks, for example as described in our [other publication on this topic](https://arxiv.org/pdf/2011.12035.pdf) comparatively evaluating DTLS1.3.
 
 
 ## Low-power Virtual Machines using rBPF
@@ -64,7 +64,7 @@ This functionality is not yet available in the master branch of RIOT, but it is 
 To try out this functionality, start with the [gcoap_bpf example](examples/gcoap_bpf).
 
 
-## Some Related Publications
+## Related Publications
 
 - K. Zandberg et al. "[Secure firmware updates for constrained IoT devices using open standards: A reality check](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8725488)." IEEE Access, 2019
 - B. Moran et al. "[A Concise Binary Object Representation (CBOR)-based Serialization Format for the Software Updates for Internet of Things (SUIT) Manifest](https://tools.ietf.org/html/draft-ietf-suit-manifest-09)." IETF Internet Draft draft-ietf-suit-manifest-09, 2020
