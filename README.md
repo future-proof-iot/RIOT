@@ -35,9 +35,9 @@ Currently, among the features we mention below, only SUIT and secure 6TiSCH supp
 We co-author the SUIT standard proposed by IETF to secure IoT software updates. The [SUIT specifications](https://tools.ietf.org/html/draft-ietf-suit-manifest-09) specify a security architecture, and the necessary metadata and cryptography to secure software updates,
 applicable on microcontroller-based devices, such as the ones RIOT runs on.
 We integrate SUIT support for secure firmware updates as described in our [publication on this topic](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8725488).
-We support a SUIT-compliant workflow as depicted below, which is the blueprint for the AirMonitor demo.
+We support a SUIT-compliant workflow as depicted below, which is the blueprint for the AirMonitor demo, shown in a [video tutorial](videos/riot-suit.mp4) we provide.
 
-To try this functionality, start with the [suit_update example](examples/suit_update).
+To try this functionality on your own hardware (an nrf52840dk board for instance) start with the [suit_update example](examples/suit_update).
 
 <a href="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp">
   <img alt="SUIT" src="https://raw.githubusercontent.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp/deliverable-6-2/doc/figures/SUIT-update-workflow.jpg" width="700">
@@ -48,17 +48,19 @@ To try this functionality, start with the [suit_update example](examples/suit_up
 
 We integrated OpenWSN, the standards-compliant open-source implementation of the [6TiSCH network stack](https://hal.inria.fr/hal-02420974/document), as described in our [publication on this topic](https://hal.inria.fr/hal-03064601/document).
 
-To try out this functionality, start by trying out the steps described in the [dedicated documentation](http://doc.riot-os.org/group__pkg__openwsn.html).
+To try out this functionality, start by trying out the steps described in the [dedicated documentation](http://doc.riot-os.org/group__pkg__openwsn.html),
+which we also show in a [video tutorial](videos/riot-openwsn.mp4), which demonstrates secure network joining over IEEE 802.15.4 radio and 6TiSCH, with OSCORE context establishment and routing tree formation with RPL, on OpenMote nodes.
 
-We plan to use this base to implement and integrate support for upcoming secure IoT protocols such as EDHOC.
+We plan to use this base, purposely designed to be extensible above the libraries providing OSCORE and COSE support, to implement and integrate complementary upcoming secure IoT protocols such as EDHOC ([Ephemeral Diffie-Hellman Over COSE](https://tools.ietf.org/html/draft-ietf-lake-edhoc)) which build upon OSCORE and COSE.
 
 Furthermore, we use this platform to benchmark and compare different secure IoT protocols stacks, for example as decribed in our [other publication on this topic](https://arxiv.org/pdf/2011.12035.pdf) comparatively evaluating DTLS1.3.
 
 
 ## Low-power Virtual Machines using rBPF
 
-We designed rBPF, a register-based VM based on extended Berkeley Packet Filters (eBPF). In our [publication on this topic](https://arxiv.org/pdf/2011.12047.pdf), we show that rBPF execution time overhead is tolerable for low-throughput, low-energy IoT devices. We further show that, using a VM based on rBPF requires only negligible memory overhead (less than 10% more memory). Compared to an alternative such as Wasm, rBPF is thus a promising approach to host small software modules, isolated from OS software, and updatable on-demand, over low-power networks.
+We designed rBPF, a register-based VM based on extended Berkeley Packet Filters (eBPF). In our [publication on this topic](https://arxiv.org/pdf/2011.12047.pdf), we show that rBPF execution time overhead is tolerable for low-throughput, low-energy IoT devices. We further show that, using a VM based on rBPF requires only negligible memory overhead (less than 10% more memory). Compared to an alternative such as WebAssembly for microcontrollers ([Wasm3](https://github.com/wasm3/wasm3)) which requires 100% overhead, rBPF is thus a promising approach to host small software modules, isolated from OS software, and updatable on-demand, over low-power networks.
 
+This functionality is not yet available in the master branch of RIOT, but it is available in this fork.
 To try out this functionality, start with the [gcoap_bpf example](examples/gcoap_bpf).
 
 
