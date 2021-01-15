@@ -77,7 +77,7 @@ To try out this functionality, start with the [gcoap_bpf example](examples/gcoap
 
 ## Required Tooling
 
-- GCC, and the specific flavour required for the platform (follow [this guide](https://doc.riot-os.org/getting-started.html) to isntall the toolchain)
+- GCC, and the specific flavour required for the platform (follow [this guide](https://doc.riot-os.org/getting-started.html) to install the toolchain)
 - [LLVM](https://llvm.org/docs/GettingStarted.html)/[Clang](https://clang.llvm.org/get_started.html)
 
 
