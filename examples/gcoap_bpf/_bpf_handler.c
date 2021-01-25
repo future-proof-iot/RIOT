@@ -89,6 +89,8 @@ static ssize_t _bpf_submit_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, vo
 static ssize_t _bpf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, void *ctx)
 {
     (void)ctx;
+    bpf_mem_region_t mem_pdu;
+    bpf_mem_region_t mem_pkt;
     bpf_coap_ctx_t bpf_ctx = {
         .pkt = pdu,
         .buf = buf,
@@ -101,9 +103,15 @@ static ssize_t _bpf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, void *ctx
     }
 
     bpf_setup(&_bpf);
+
+    bpf_add_region(&_bpf, &mem_pdu, pdu->hdr, 256, BPF_MEM_REGION_READ | BPF_MEM_REGION_WRITE);
+    bpf_add_region(&_bpf, &mem_pkt, pdu, sizeof(coap_pkt_t), BPF_MEM_REGION_READ | BPF_MEM_REGION_WRITE);
+
     int64_t result = -1;
     uint32_t start = xtimer_now_usec();
+
     int res = bpf_execute(&_bpf, &bpf_ctx, sizeof(bpf_ctx), &result);
+
     uint32_t stop = xtimer_now_usec();
     printf("Execution done res=%i, result=%i\n", res, (int)result);
     printf("duration: %"PRIu32" us\n",
