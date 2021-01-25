@@ -29,6 +29,10 @@ USEMODULE += saul
 USEMODULE += saul_reg
 USEMODULE += saul_default
 
+ifeq (native,$(BOARD))
+  USE_ETHOS ?= 0
+endif
+
 # Change this to 0 to not use ethos
 USE_ETHOS ?= 1
 
