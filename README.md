@@ -39,8 +39,8 @@ We support a SUIT-compliant workflow as depicted below, which is the blueprint f
 
 To try this functionality on your own hardware (an nrf52840dk board for instance) start with the [suit_update example](examples/suit_update).
 
-<a href="https://github.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp">
-  <img alt="SUIT" src="https://raw.githubusercontent.com/future-proof-iot/H2020-Sparta-D6-2-Sparta-RIOT-fp/deliverable-6-2/doc/figures/SUIT-update-workflow.jpg" width="700">
+<a href="https://github.com/future-proof-iot/RIOT/tree/H2020-Sparta-Deliverable-D6-2">
+  <img alt="SUIT" src="https://raw.githubusercontent.com/future-proof-iot/RIOT/H2020-Sparta-Deliverable-D6-2/doc/figures/SUIT-update-workflow.jpg" width="700">
 </a>
 
 
