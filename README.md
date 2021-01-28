@@ -35,7 +35,7 @@ Currently, among the features we mention below, only SUIT and secure 6TiSCH supp
 We co-author the SUIT standard proposed by IETF to secure IoT software updates. The [SUIT specifications](https://tools.ietf.org/html/draft-ietf-suit-manifest-09) specify a security architecture, and the necessary metadata and cryptography to secure software updates,
 applicable on microcontroller-based devices, such as the ones RIOT runs on.
 We integrate SUIT support for secure firmware updates as described in our [publication on this topic](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8725488).
-We support a SUIT-compliant workflow as depicted below, which is the blueprint for the AirMonitor demo, shown in a [video tutorial](videos/riot-suit.mp4) we provide.
+We support a SUIT-compliant workflow as depicted below, which is the blueprint for the AirMonitor demo, shown in a [video tutorial](https://github.com/future-proof-iot/RIOT/raw/H2020-Sparta-Deliverable-D6-2/videos/riot-suit.mp4) we provide.
 
 To try this functionality on your own hardware (an nrf52840dk board for instance) start with the [suit_update example](examples/suit_update).
 
@@ -43,13 +43,24 @@ To try this functionality on your own hardware (an nrf52840dk board for instance
   <img alt="SUIT" src="https://raw.githubusercontent.com/future-proof-iot/RIOT/H2020-Sparta-Deliverable-D6-2/doc/figures/SUIT-update-workflow.jpg" width="700">
 </a>
 
+As shown in the above figure, the workflow consists in a preliminary phase (Phase 0) whereby the maintainer produces and flashes the IoT devices with commissioning material : the bootloader, the initial image, and authorized crypto material. Once the IoT device commissioned, the maintainer can trigger iterations through cycles of phases 1-5, whereby the authorized maintainer can build a new image and sign the corresponding standard metadata (the SUIT manifest) which can be transferred to the device over the network via a repository (CoAP resource directory), and upon cryptographic verification on-board the device, the new image is installed and booted.
+
+Using the mechanisms specified by SUIT, our security-enhanced OS can for example mitigate the below attacks.
+
+*Tampered Firmware Update Attacks* –  An attacker may try to update the IoT device with a modified and intentionally flawed firmware image. To counter this threat, our prototype based on SUIT uses digital signatures on a hash of the image binary and the metadata to ensure integrity of both the firmware and its metadata. 
+
+*Unauthorized Firmware Update Attacks* – An unauthorized party may attempt to update the IoT device with modified image. Using digital signatures and public key cryptography, our prototype based on SUIT ensure that only the authorized maintainer (holding the authorized private key) will be able to update de device.
+
+*Firmware Update Replay Attacks* – An attacker may try to replay a valid, but old (known-to-be-flawed) firmware. This threat is mitigated by using a sequence number. Our prototype based on SUIT uses a sequence number, which is increased with every new firmware update.
+
+*Firmware Update Mismatch Attacks* – An attacker may try replaying a firmware update that is authentic, but for an incompatible device. Our prototype based on SUIT includes device-specific conditions, which can be verified before installing a firmware image, thereby preventing the device from using an incompatible firmware image.
 
 ## Secure Low-power IoT Networking
 
 We integrated OpenWSN, the standards-compliant open-source implementation of the [6TiSCH network stack](https://hal.inria.fr/hal-02420974/document), as described in our [publication on this topic](https://hal.inria.fr/hal-03064601/document).
 
 To try out this functionality, start by trying out the steps described in the [dedicated documentation](http://doc.riot-os.org/group__pkg__openwsn.html),
-which we also show in a [video tutorial](videos/riot-openwsn.mp4), which demonstrates secure network joining over IEEE 802.15.4 radio and 6TiSCH, with OSCORE context establishment and routing tree formation with RPL, on OpenMote nodes.
+which we also show in a [video tutorial](https://github.com/future-proof-iot/RIOT/raw/H2020-Sparta-Deliverable-D6-2/videos/riot-openwsn.mp4), which demonstrates secure network joining with CoJP ([Constrained Join Protocol](https://tools.ietf.org/html/draft-ietf-6tisch-minimal-security-15)) over IEEE 802.15.4 radio and 6TiSCH, with OSCORE context establishment and routing tree formation with RPL, on OpenMote nodes.
 
 We plan to use this base, purposely designed to be extensible above the libraries providing OSCORE and COSE support, to implement and integrate complementary upcoming secure IoT protocols such as EDHOC ([Ephemeral Diffie-Hellman Over COSE](https://tools.ietf.org/html/draft-ietf-lake-edhoc)) which build upon OSCORE and COSE.
 
