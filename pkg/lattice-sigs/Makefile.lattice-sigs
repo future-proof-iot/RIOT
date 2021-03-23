@@ -1,0 +1,7 @@
+MODULE := lattice-sigs
+
+CFLAGS += -Wno-sign-compare
+CFLAGS += -Wno-unused-parameter
+
+
+include $(RIOTBASE)/Makefile.base
