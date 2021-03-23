@@ -4,4 +4,15 @@ CFLAGS += -Wno-sign-compare
 CFLAGS += -Wno-unused-parameter
 
 
+SRC += fips202.c
+SRC += ntt.c
+SRC += packing.c
+SRC += poly.c
+SRC += polyvec.c
+SRC += randombytes.c
+SRC += reduce.c
+SRC += rounding.c
+SRC += sign.c
+SRC += symmetric-shake.c
+
 include $(RIOTBASE)/Makefile.base
