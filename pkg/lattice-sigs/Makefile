@@ -1,6 +1,6 @@
 PKG_NAME=lattice-sigs
 PKG_URL=https://github.com/gbanegas/dilithium_sig_clean
-PKG_VERSION=4ff82a8c65c0ce5e9b4a97f60828d6d4a7a4f5cd
+PKG_VERSION=acf16f04fe35cfb82491ff3e693b7123909507ee
 PKG_LICENSE=BSD-3-Clause
 
 include $(RIOTBASE)/pkg/pkg.mk

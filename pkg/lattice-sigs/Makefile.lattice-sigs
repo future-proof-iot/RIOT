@@ -1,26 +1,15 @@
 MODULE := lattice-sigs
 
-CFLAGS += -Wno-sign-compare
-CFLAGS += -Wno-unused-parameter
-
-SRC += hash.c
-SRC += hss.c
-SRC += hss_common.c
-SRC += hss_compute.c
-SRC += hss_derive.c
-SRC += hss_generate.c
-SRC += hss_keygen.c
-SRC += hss_param.c
-SRC += hss_reserve.c
-SRC += hss_sign.c
-SRC += hss_verify.c
-SRC += hss_verify_inc.c
-SRC += hss_zeroize.c
-SRC += lm_common.c
-SRC += lm_ots_common.c
-SRC += lm_ots_verify.c
-SRC += lm_verify.c
-SRC += sha256.c
+SRC += fips202.c
+SRC += ntt.c
+SRC += packing.c
+SRC += poly.c
+SRC += polyvec.c
+SRC += randombytes.c
+SRC += reduce.c
+SRC += rounding.c
+SRC += sign.c
+SRC += symmetric-shake.c
 
 include $(RIOTBASE)/Makefile.base
 
