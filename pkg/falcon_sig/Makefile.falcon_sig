@@ -1,0 +1,15 @@
+MODULE := falcon_sig
+
+SRC += codec.c
+SRC += common.c
+SRC += fft.c
+SRC += fips202.c
+SRC += fpr.c
+SRC += keygen.c
+SRC += rng.c
+SRC += pqclean.c
+SRC += sign.c
+SRC += vrfy.c
+
+
+include $(RIOTBASE)/Makefile.base
