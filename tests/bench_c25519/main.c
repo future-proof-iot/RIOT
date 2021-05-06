@@ -88,9 +88,16 @@ int main(void)
     size_t verify_stack_use = sizeof(_stack) - thread_measure_stack_free(_stack);
 
     printf("{ \"result\": { \"sign\": %lums, \"verify\": %lums "
+#ifdef CLOCK_CORECLOCK
+           "\"sign_ticks\": %"PRIu32", \"verify_ticks\": %"PRIu32" "
+#endif
            "\"sign_stack\": %"PRIu32"B \"verify_stack\": %"PRIu32"B "
            "\"signature_size\": %dB } }\n",
           sign_time/US_PER_MS, verify_time/US_PER_MS,
+#ifdef CLOCK_CORECLOCK
+          (uint32_t)(((uint64_t)sign_time * CLOCK_CORECLOCK)/US_PER_SEC),
+          (uint32_t)(((uint64_t)verify_time * CLOCK_CORECLOCK)/US_PER_SEC),
+#endif
           (uint32_t)sign_stack_use, (uint32_t)verify_stack_use,
-          64);
+          EDSIGN_SIGNATURE_SIZE);
 }
