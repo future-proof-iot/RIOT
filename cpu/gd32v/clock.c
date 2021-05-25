@@ -32,7 +32,7 @@
 #define CLOCK_APB2_DIV_CONF  (CLOCK_APB2_DIV << RCU_CFG0_APB2PSC_Pos)
 
 #define PREDV0_CONF          1  /* Divide by 2 */
-#define PLL_MULT_FACTOR      26 /* Multiply by 26 */
+#define PLL_MULT_FACTOR      (2 * CLOCK_CORECLOCK / CLOCK_HSE) /* Multiply by 26 */
 
 #define RCU_CFG0_SCS_IRC8    (0 << RCU_CFG0_SCS_Pos)
 #define RCU_CFG0_SCS_HXTAL   (1 << RCU_CFG0_SCS_Pos)
